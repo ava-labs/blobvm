@@ -11,7 +11,6 @@ import (
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/hashing"
 	"github.com/ethereum/go-ethereum/common"
 	smath "github.com/ethereum/go-ethereum/common/math"
 
@@ -27,8 +26,6 @@ import (
 //   -> [key]
 // 0x4/ (balance)
 //   -> [owner]=> balance
-// 0x5/ (owned spaces)
-//   -> [owner]/[space]=> nil
 
 const (
 	blockPrefix   = 0x0
@@ -36,29 +33,15 @@ const (
 	txValuePrefix = 0x2
 	keyPrefix     = 0x3
 	balancePrefix = 0x4
-	ownedPrefix   = 0x5
 
 	shortIDLen = 20
 
 	linkedTxLRUSize = 512
 )
 
-type CompactRange struct {
-	Start []byte
-	Limit []byte
-}
-
 var (
 	lastAccepted  = []byte("last_accepted")
 	linkedTxCache = &cache.LRU{Size: linkedTxLRUSize}
-
-	CompactRanges = []*CompactRange{
-		// Don't compact block/tx/txValue ranges because no overwriting/deletion
-		{[]byte{keyPrefix, parser.ByteDelimiter}, []byte{balancePrefix, parser.ByteDelimiter}},
-		// Group expiry and pruning together
-		{[]byte{balancePrefix, parser.ByteDelimiter}, []byte{ownedPrefix, parser.ByteDelimiter}},
-		{[]byte{ownedPrefix, parser.ByteDelimiter}, []byte{ownedPrefix + 1, parser.ByteDelimiter}},
-	}
 )
 
 // [blockPrefix] + [delimiter] + [blockID]
@@ -86,20 +69,6 @@ func PrefixTxValueKey(txID ids.ID) (k []byte) {
 	k[1] = parser.ByteDelimiter
 	copy(k[2:], txID[:])
 	return k
-}
-
-func RawSpace(space []byte, blockTime uint64) (ids.ShortID, error) {
-	spaceLen := len(space)
-	r := make([]byte, spaceLen+1+8)
-	copy(r, space)
-	r[spaceLen] = parser.ByteDelimiter
-	binary.BigEndian.PutUint64(r[spaceLen+1:], blockTime)
-	h := hashing.ComputeHash160(r)
-	rspace, err := ids.ToShortID(h)
-	if err != nil {
-		return ids.ShortID{}, err
-	}
-	return rspace, nil
 }
 
 // Assumes [key] does not contain delimiter

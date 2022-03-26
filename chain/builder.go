@@ -40,12 +40,6 @@ func BuildBlock(vm VM, preferred ids.ID) (snowman.Block, error) {
 	}
 	vdb := versiondb.New(parentDB)
 
-	// Remove all expired spaces
-	if err := ExpireNext(vdb, parent.Tmstmp, b.Tmstmp, true); err != nil {
-		return nil, err
-	}
-
-	b.Winners = map[ids.ID]*Activity{}
 	b.Txs = []*Transaction{}
 	units := uint64(0)
 

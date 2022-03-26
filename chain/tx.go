@@ -119,34 +119,6 @@ func (t *Transaction) Execute(g *Genesis, db database.Database, blk *StatelessBl
 	if err := SetTransaction(db, t); err != nil {
 		return err
 	}
-
-	// Process lottery reward
-	//
-	// If there is no space after the selected iterator, no reward will be
-	// distributed.
-	if blk.Dummy() {
-		// Do not process any rewards if it is just a dummy block
-		return nil
-	}
-	rewardAmount := t.FeeUnits(g) * blk.Price * g.LotteryRewardMultipler / LotteryRewardDivisor
-	if rewardAmount == 0 {
-		// For transactions (like transfers) where the [FeeUnits] are equal to the [BaseTxFee], it
-		// is possible that the reward could be 0.
-		return nil
-	}
-	recipient, distributed, err := ApplyReward(db, blk.ID(), t.ID(), t.sender, rewardAmount)
-	if err != nil {
-		return err
-	}
-	if distributed {
-		blk.Winners[t.ID()] = &Activity{
-			Tmstmp: blk.Tmstmp,
-			Typ:    Reward,
-			TxID:   t.ID(),
-			To:     recipient.Hex(),
-			Units:  rewardAmount,
-		}
-	}
 	return nil
 }
 
