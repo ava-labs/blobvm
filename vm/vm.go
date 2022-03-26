@@ -26,13 +26,13 @@ import (
 	log "github.com/inconshreveable/log15"
 
 	avagoversion "github.com/ava-labs/avalanchego/version"
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/mempool"
-	"github.com/ava-labs/spacesvm/version"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/mempool"
+	"github.com/ava-labs/blobvm/version"
 )
 
 const (
-	Name           = "spacesvm"
+	Name           = "blobvm"
 	PublicEndpoint = "/public"
 )
 
@@ -101,7 +101,7 @@ func (vm *VM) Initialize(
 	_ []*common.Fx,
 	appSender common.AppSender,
 ) error {
-	log.Info("initializing spacesvm", "version", version.Version)
+	log.Info("initializing blobvm", "version", version.Version)
 
 	// Load config
 	vm.config.SetDefaults()
@@ -169,7 +169,7 @@ func (vm *VM) Initialize(
 		}
 
 		vm.preferred, vm.lastAccepted = blkID, blk
-		log.Info("initialized spacesvm from last accepted", "block", blkID)
+		log.Info("initialized blobvm from last accepted", "block", blkID)
 	} else {
 		genesisBlk, err := chain.ParseStatefulBlock(
 			vm.genesis.StatefulBlock(),
@@ -194,7 +194,7 @@ func (vm *VM) Initialize(
 		}
 		gBlkID := genesisBlk.ID()
 		vm.preferred, vm.lastAccepted = gBlkID, genesisBlk
-		log.Info("initialized spacesvm from genesis", "block", gBlkID)
+		log.Info("initialized blobvm from genesis", "block", gBlkID)
 	}
 	vm.AirdropData = nil
 

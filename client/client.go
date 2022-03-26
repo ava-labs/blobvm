@@ -1,7 +1,7 @@
 // Copyright (C) 2019-2021, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-// Package client implements "spacesvm" client SDK.
+// Package client implements "blobvm" client SDK.
 package client
 
 import (
@@ -16,13 +16,13 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fatih/color"
 
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/parser"
-	"github.com/ava-labs/spacesvm/tdata"
-	"github.com/ava-labs/spacesvm/vm"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/parser"
+	"github.com/ava-labs/blobvm/tdata"
+	"github.com/ava-labs/blobvm/vm"
 )
 
-// Client defines spacesvm client operations.
+// Client defines blobvm client operations.
 type Client interface {
 	// Pings the VM.
 	Ping(ctx context.Context) (bool, error)
@@ -70,7 +70,7 @@ func New(uri string, reqTimeout time.Duration) Client {
 	req := rpc.NewEndpointRequester(
 		uri,
 		vm.PublicEndpoint,
-		"spacesvm",
+		"blobvm",
 	)
 	return &client{req: req}
 }

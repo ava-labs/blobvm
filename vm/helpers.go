@@ -10,7 +10,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 
-	"github.com/ava-labs/spacesvm/chain"
+	"github.com/ava-labs/blobvm/chain"
 )
 
 const (

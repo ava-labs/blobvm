@@ -1,16 +1,16 @@
-module github.com/ava-labs/spacesvm/tests/runner
+module github.com/ava-labs/blobvm/tests/runner
 
 go 1.17
 
 // require "runner" own go module file to avoid pulling
 // "avalanche-network-runner" dependencies
 
-replace github.com/ava-labs/spacesvm => ../..
+replace github.com/ava-labs/blobvm => ../..
 
 require (
 	github.com/ava-labs/avalanche-network-runner v1.0.7
 	github.com/ava-labs/avalanchego v1.7.8
-	github.com/ava-labs/spacesvm v0.0.0-00010101000000-000000000000
+	github.com/ava-labs/blobvm v0.0.0-00010101000000-000000000000
 	github.com/onsi/ginkgo/v2 v2.1.0
 	github.com/spf13/cobra v1.3.0
 )

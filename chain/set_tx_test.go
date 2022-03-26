@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/ava-labs/spacesvm/parser"
+	"github.com/ava-labs/blobvm/parser"
 )
 
 func TestSetTx(t *testing.T) {

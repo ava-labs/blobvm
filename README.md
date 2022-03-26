@@ -83,7 +83,7 @@ will expire.
 #### Content-Addressable Keys
 To support common blockchain use cases (like NFT storage), the SpacesVM
 supports the storage of arbitrary size files using content-addressable keys.
-You can try this out using `spaces-cli set-file <space> <filename>`.
+You can try this out using `blob-cli set-file <space> <filename>`.
 
 ### Lifeline
 When your space uses a lot of storage and/or you've had it for a while, you may
@@ -98,7 +98,7 @@ its life. This enables the community to support useful spaces with their `SPC`.
 ### Resolve
 When you want to view data stored in SpacesVM, you call `Resolve` on the value
 path: `<space>/<key>`. If you stored a file at a particular path, use this
-command to retrieve it: `spaces-cli resolve-file <path> <destination
+command to retrieve it: `blob-cli resolve-file <path> <destination
 filepath>`.
 
 ### Transfer
@@ -131,12 +131,12 @@ VM](#running-the-vm)._
 The easiest way to try out SpacesVM is to visit the demo website
 [tryspaces.xyz].
 
-### spaces-cli
+### blob-cli
 #### Install
 ```bash
-git clone https://github.com/ava-labs/spacesvm.git;
-cd spacesvm;
-go install -v ./cmd/spaces-cli;
+git clone https://github.com/ava-labs/blobvm.git;
+cd blobvm;
+go install -v ./cmd/blob-cli;
 ```
 
 #### Usage
@@ -144,7 +144,7 @@ go install -v ./cmd/spaces-cli;
 SpacesVM CLI
 
 Usage:
-  spaces-cli [command]
+  blob-cli [command]
 
 Available Commands:
   activity     View recent activity on the network
@@ -168,23 +168,23 @@ Available Commands:
 
 Flags:
       --endpoint string           RPC endpoint for VM (default "https://api.tryspaces.xyz")
-  -h, --help                      help for spaces-cli
-      --private-key-file string   private key file path (default ".spaces-cli-pk")
+  -h, --help                      help for blob-cli
+      --private-key-file string   private key file path (default ".blob-cli-pk")
       --verbose                   Print verbose information about operations
 
-Use "spaces-cli [command] --help" for more information about a command.
+Use "blob-cli [command] --help" for more information about a command.
 ```
 
 ##### Uploading Files
 ```
-spaces-cli set-file spaceslover ~/Downloads/computer.gif -> patrick/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8
-spaces-cli resolve-file spaceslover/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8 computer_copy.gif
-spaces-cli delete-file spaceslover/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8
+blob-cli set-file spaceslover ~/Downloads/computer.gif -> patrick/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8
+blob-cli resolve-file spaceslover/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8 computer_copy.gif
+blob-cli delete-file spaceslover/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8
 ```
 
-### [Golang SDK](https://github.com/ava-labs/spacesvm/blob/master/client/client.go)
+### [Golang SDK](https://github.com/ava-labs/blobvm/blob/master/client/client.go)
 ```golang
-// Client defines spacesvm client operations.
+// Client defines blobvm client operations.
 type Client interface {
 	// Pings the VM.
 	Ping() (bool, error)
@@ -230,49 +230,49 @@ type Client interface {
 
 ### Public Endpoints (`/public`)
 
-#### spacesvm.ping
+#### blobvm.ping
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.ping",
+  "method": "blobvm.ping",
   "params":{},
   "id": 1
 }
 >>> {"success":<bool>}
 ```
 
-#### spacesvm.network
+#### blobvm.network
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.network",
+  "method": "blobvm.network",
   "params":{},
   "id": 1
 }
 >>> {"networkId":<uint32>, "subnetId":<ID>, "chainId":<ID>}
 ```
 
-#### spacesvm.genesis
+#### blobvm.genesis
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.genesis",
+  "method": "blobvm.genesis",
   "params":{},
   "id": 1
 }
 >>> {"genesis":<genesis file>}
 ```
 
-#### spacesvm.suggestedFee
+#### blobvm.suggestedFee
 _Provide your intent and get back a transaction to sign._
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.suggestedFee",
+  "method": "blobvm.suggestedFee",
   "params":{
     "input":<chain.Input (tx abstractor)>
   },
@@ -305,12 +305,12 @@ transfer {type,to,units}
 
 ```
 
-#### spacesvm.issueTx
+#### blobvm.issueTx
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.issueTx",
+  "method": "blobvm.issueTx",
   "params":{
     "typedData":<EIP-712 compliant typed data>,
     "signature":<hex-encoded sig>
@@ -322,19 +322,19 @@ transfer {type,to,units}
 
 ##### Transaction Creation Worflow
 ```
-1) spacesvm.claimed {"space":"patrick"} => Yes/No
-2) spacesvm.suggestedFee {"input":{"type":"claim", "space":"patrick"}} => {"typedData":<EIP-712 Typed Data>, "cost":<total fee>}
+1) blobvm.claimed {"space":"patrick"} => Yes/No
+2) blobvm.suggestedFee {"input":{"type":"claim", "space":"patrick"}} => {"typedData":<EIP-712 Typed Data>, "cost":<total fee>}
 3) sign EIP-712 Typed Data
-4) spacesvm.issueTx {"typedData":<from spacesvm.suggestedFee>, "signature":<sig from step 3>} => {"txId":<ID>}
-5) [loop] spacesvm.hasTx {"txId":<ID>} => {"accepted":true"}
+4) blobvm.issueTx {"typedData":<from blobvm.suggestedFee>, "signature":<sig from step 3>} => {"txId":<ID>}
+5) [loop] blobvm.hasTx {"txId":<ID>} => {"accepted":true"}
 ```
 
-#### spacesvm.hasTx
+#### blobvm.hasTx
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.hasTx",
+  "method": "blobvm.hasTx",
   "params":{
     "txId":<transaction ID>
   },
@@ -343,24 +343,24 @@ transfer {type,to,units}
 >>> {"accepted":<bool>}
 ```
 
-#### spacesvm.lastAccepted
+#### blobvm.lastAccepted
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.lastAccepted",
+  "method": "blobvm.lastAccepted",
   "params":{},
   "id": 1
 }
 >>> {"height":<uint64>, "blockId":<ID>}
 ```
 
-#### spacesvm.claimed
+#### blobvm.claimed
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.claimed",
+  "method": "blobvm.claimed",
   "params":{
     "space":<string>
   },
@@ -369,12 +369,12 @@ transfer {type,to,units}
 >>> {"claimed":<bool>}
 ```
 
-#### spacesvm.info
+#### blobvm.info
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.info",
+  "method": "blobvm.info",
   "params":{
     "space":<string>
   },
@@ -408,12 +408,12 @@ transfer {type,to,units}
 }
 ```
 
-#### spacesvm.resolve
+#### blobvm.resolve
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.resolve",
+  "method": "blobvm.resolve",
   "params":{
     "path":<string | ex:jim/twitter>
   },
@@ -422,12 +422,12 @@ transfer {type,to,units}
 >>> {"exists":<bool>, "value":<base64 encoded>, "valueMeta":<chain.ValueMeta>}
 ```
 
-#### spacesvm.balance
+#### blobvm.balance
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.balance",
+  "method": "blobvm.balance",
   "params":{
     "address":<hex encoded>
   },
@@ -436,12 +436,12 @@ transfer {type,to,units}
 >>> {"balance":<uint64>}
 ```
 
-#### spacesvm.recentActivity
+#### blobvm.recentActivity
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.recentActivity",
+  "method": "blobvm.recentActivity",
   "params":{},
   "id": 1
 }
@@ -473,12 +473,12 @@ transfer {timestamp,sender,txId,type,to,units}
 reward   {timestamp,txId,type,to,units}
 ```
 
-#### spacesvm.owned
+#### blobvm.owned
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.owned",
+  "method": "blobvm.owned",
   "params":{
     "address":<hex encoded>
   },
@@ -489,25 +489,25 @@ reward   {timestamp,txId,type,to,units}
 
 ### Advanced Public Endpoints (`/public`)
 
-#### spacesvm.suggestedRawFee
+#### blobvm.suggestedRawFee
 _Can use this to get the current fee rate._
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.suggestedRawFee",
+  "method": "blobvm.suggestedRawFee",
   "params":{},
   "id": 1
 }
 >>> {"price":<uint64>,"cost":<uint64>}
 ```
 
-#### spacesvm.issueRawTx
+#### blobvm.issueRawTx
 ```
 <<< POST
 {
   "jsonrpc": "2.0",
-  "method": "spacesvm.issueRawTx",
+  "method": "blobvm.issueRawTx",
   "params":{
     "tx":<raw tx bytes>
   },
@@ -517,7 +517,7 @@ _Can use this to get the current fee rate._
 ```
 
 ## Running the VM
-To build the VM (and `spaces-cli`), run `./scripts/build.sh`.
+To build the VM (and `blob-cli`), run `./scripts/build.sh`.
 
 ### Joining the Spaces Demo
 If you'd like to validate the [Spaces Subnet Demo] on Fuji, please follow the following
@@ -527,13 +527,13 @@ _You can find the genesis used for the Spaces Demo in `networks/42/*`._
 
 #### Download and Build SpacesVM
 ```bash
-git clone https://github.com/ava-labs/spacesvm.git;
-cd spacesvm;
+git clone https://github.com/ava-labs/blobvm.git;
+cd blobvm;
 ./scripts/build.sh
 ```
 
 Running the above commands will generate a binary and save it at
-`~/spacesvm/build/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm`.
+`~/blobvm/build/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm`.
 
 #### Move Binary
 Once the SpacesVM binary is built, you'll need to move it to AvalancheGo's
@@ -548,9 +548,9 @@ build-dir
 ```
 
 To put the SpacesVM binary in the right place, run the following command
-(assuming the `avalanchego` and `spacesvm` repos are in the same folder):
+(assuming the `avalanchego` and `blobvm` repos are in the same folder):
 ```bash
-mv ./spacesvm/build/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm ./avalanchego/build/plugins;
+mv ./blobvm/build/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm ./avalanchego/build/plugins;
 ```
 
 #### Add Subnet to Whitelist
@@ -628,17 +628,17 @@ If you have any questions, reach out to @\_patrickogrady on Twitter!
 
 ### Running a local network
 [`scripts/run.sh`](scripts/run.sh) automatically installs [avalanchego], sets up a local network,
-and creates a `spacesvm` genesis file. To build and run E2E tests, you need to set the variable `E2E` before it: `E2E=true ./scripts/run.sh 1.7.8`
+and creates a `blobvm` genesis file. To build and run E2E tests, you need to set the variable `E2E` before it: `E2E=true ./scripts/run.sh 1.7.8`
 
 _See [`tests/e2e`](tests/e2e) and [`tests/runner`](tests/runner) to see how it's set up and how its client requests are made._
 
 ```bash
 # to startup a local cluster (good for development)
-cd ${HOME}/go/src/github.com/ava-labs/spacesvm
+cd ${HOME}/go/src/github.com/ava-labs/blobvm
 ./scripts/run.sh 1.7.8
 
 # to run full e2e tests and shut down cluster afterwards
-cd ${HOME}/go/src/github.com/ava-labs/spacesvm
+cd ${HOME}/go/src/github.com/ava-labs/blobvm
 E2E=true ./scripts/run.sh 1.7.8
 ```
 
@@ -662,7 +662,7 @@ curl --location --request POST 'http://localhost:61858/ext/bc/BJfusM2TpHCEfmt5i7
 --header 'Content-Type: application/json' \
 --data-raw '{
     "jsonrpc": "2.0",
-    "method": "spacesvm.ping",
+    "method": "blobvm.ping",
     "params":{},
     "id": 1
 }'
@@ -675,7 +675,7 @@ curl --location --request POST 'http://localhost:61858/ext/bc/BJfusM2TpHCEfmt5i7
 --header 'Content-Type: application/json' \
 --data-raw '{
     "jsonrpc": "2.0",
-    "method": "spacesvm.resolve",
+    "method": "blobvm.resolve",
     "params":{
       "path": "coolperson/twitter"
     },

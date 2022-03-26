@@ -8,7 +8,7 @@ import (
 
 	log "github.com/inconshreveable/log15"
 
-	"github.com/ava-labs/spacesvm/chain"
+	"github.com/ava-labs/blobvm/chain"
 )
 
 func (vm *VM) compactCall(r *chain.CompactRange) {

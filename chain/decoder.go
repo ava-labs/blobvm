@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/spacesvm/tdata"
+	"github.com/ava-labs/blobvm/tdata"
 )
 
 const (

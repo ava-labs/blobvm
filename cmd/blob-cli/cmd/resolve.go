@@ -11,7 +11,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/spacesvm/client"
+	"github.com/ava-labs/blobvm/client"
 )
 
 var resolveCmd = &cobra.Command{

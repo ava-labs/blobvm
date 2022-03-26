@@ -1,7 +1,7 @@
 // Copyright (C) 2019-2021, Ava Labs, Inc. All rights reserved.
 // See the file LICENSE for licensing terms.
 
-// "spaces-cli" implements spacesvm client operation interface.
+// "blob-cli" implements blobvm client operation interface.
 package cmd
 
 import (
@@ -23,9 +23,9 @@ var (
 	workDir        string
 
 	rootCmd = &cobra.Command{
-		Use:        "spaces-cli",
+		Use:        "blob-cli",
 		Short:      "SpacesVM CLI",
-		SuggestFor: []string{"spaces-cli", "spacescli", "spacesctl"},
+		SuggestFor: []string{"blob-cli", "blobcli", "spacesctl"},
 	}
 )
 
@@ -59,7 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(
 		&privateKeyFile,
 		"private-key-file",
-		".spaces-cli-pk",
+		".blob-cli-pk",
 		"private key file path",
 	)
 	rootCmd.PersistentFlags().StringVar(
