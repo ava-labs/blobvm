@@ -26,15 +26,10 @@ func init() {
 	errs := wrappers.Errs{}
 	errs.Add(
 		c.RegisterType(&BaseTx{}),
-		c.RegisterType(&ClaimTx{}),
-		c.RegisterType(&LifelineTx{}),
 		c.RegisterType(&SetTx{}),
-		c.RegisterType(&DeleteTx{}),
 		c.RegisterType(&TransferTx{}),
-		c.RegisterType(&MoveTx{}),
 		c.RegisterType(&Transaction{}),
 		c.RegisterType(&StatefulBlock{}),
-		c.RegisterType(&SpaceInfo{}),
 		c.RegisterType(&CustomAllocation{}),
 		c.RegisterType(&Airdrop{}),
 		c.RegisterType(&Genesis{}),
