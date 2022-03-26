@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"strconv"
 
-	"github.com/ava-labs/spacesvm/tdata"
+	"github.com/ava-labs/blobvm/tdata"
 	"github.com/ethereum/go-ethereum/common"
 )
 

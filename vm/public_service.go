@@ -12,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	log "github.com/inconshreveable/log15"
 
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/parser"
-	"github.com/ava-labs/spacesvm/tdata"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/parser"
+	"github.com/ava-labs/blobvm/tdata"
 )
 
 type PublicService struct {

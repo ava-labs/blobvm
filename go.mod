@@ -1,4 +1,4 @@
-module github.com/ava-labs/spacesvm
+module github.com/ava-labs/blobvm
 
 go 1.17
 

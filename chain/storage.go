@@ -19,7 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	log "github.com/inconshreveable/log15"
 
-	"github.com/ava-labs/spacesvm/parser"
+	"github.com/ava-labs/blobvm/parser"
 )
 
 // 0x0/ (block hashes)

@@ -56,14 +56,14 @@ elif [[ ${GOOS} == "darwin" ]]; then
 fi
 find /tmp/avalanchego-v${VERSION}
 
-echo "building spacesvm"
+echo "building blobvm"
 go build \
 -o /tmp/avalanchego-v${VERSION}/plugins/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm \
-./cmd/spacesvm
+./cmd/blobvm
 find /tmp/avalanchego-v${VERSION}
 
-echo "building spaces-cli"
-go build -v -o /tmp/spaces-cli ./cmd/spaces-cli
+echo "building blob-cli"
+go build -v -o /tmp/blob-cli ./cmd/blob-cli
 
 echo "creating allocations file"
 cat <<EOF > /tmp/allocations.json
@@ -79,9 +79,9 @@ cat <<EOF > /tmp/allocations.json
 EOF
 
 echo "creating VM genesis file"
-rm -f /tmp/spacesvm.genesis
-/tmp/spaces-cli genesis 1 /tmp/allocations.json \
---genesis-file /tmp/spacesvm.genesis \
+rm -f /tmp/blobvm.genesis
+/tmp/blob-cli genesis 1 /tmp/allocations.json \
+--genesis-file /tmp/blobvm.genesis \
 --airdrop-hash 0xccbf8e430b30d08b5b3342208781c40b373d1b5885c1903828f367230a2568da \
 --airdrop-units 10000
 
@@ -102,7 +102,7 @@ echo "launch local test cluster in the background"
 /tmp/runner \
 --avalanchego-path=/tmp/avalanchego-v${VERSION}/avalanchego \
 --vm-id=sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm \
---vm-genesis-path=/tmp/spacesvm.genesis \
+--vm-genesis-path=/tmp/blobvm.genesis \
 --output-path=/tmp/avalanchego-v${VERSION}/output.yaml 2> /dev/null &
 PID=${!}
 

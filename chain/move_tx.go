@@ -9,8 +9,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/ava-labs/spacesvm/parser"
-	"github.com/ava-labs/spacesvm/tdata"
+	"github.com/ava-labs/blobvm/parser"
+	"github.com/ava-labs/blobvm/tdata"
 )
 
 var _ UnsignedTransaction = &MoveTx{}

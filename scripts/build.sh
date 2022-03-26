@@ -12,11 +12,11 @@ fi
 # Set default binary directory location
 name="sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm"
 
-# Build spacesvm, which is run as a subprocess
+# Build blobvm, which is run as a subprocess
 mkdir -p ./build
 
-echo "Building spacesvm in ./build/$name"
-go build -o ./build/$name ./cmd/spacesvm
+echo "Building blobvm in ./build/$name"
+go build -o ./build/$name ./cmd/blobvm
 
-echo "Building spaces-cli in ./build/spaces-cli"
-go build -o ./build/spaces-cli ./cmd/spaces-cli
+echo "Building blob-cli in ./build/blob-cli"
+go build -o ./build/blob-cli ./cmd/blob-cli

@@ -12,9 +12,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/client"
-	"github.com/ava-labs/spacesvm/parser"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/client"
+	"github.com/ava-labs/blobvm/parser"
 )
 
 var claimCmd = &cobra.Command{
@@ -26,7 +26,7 @@ with the space information.
 
 # Issues "ClaimTx" for the ownership of "hello.avax".
 # "hello.avax" is the space (or namespace)
-$ spaces-cli claim hello.avax
+$ blob-cli claim hello.avax
 <<COMMENT
 success
 COMMENT

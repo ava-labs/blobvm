@@ -6,8 +6,8 @@ package chain
 import (
 	"strconv"
 
-	"github.com/ava-labs/spacesvm/parser"
-	"github.com/ava-labs/spacesvm/tdata"
+	"github.com/ava-labs/blobvm/parser"
+	"github.com/ava-labs/blobvm/tdata"
 )
 
 var _ UnsignedTransaction = &LifelineTx{}

@@ -11,9 +11,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/client"
-	"github.com/ava-labs/spacesvm/parser"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/client"
+	"github.com/ava-labs/blobvm/parser"
 )
 
 var setCmd = &cobra.Command{
@@ -28,12 +28,12 @@ with "foo" as space and "hello" as key. The space/key cannot
 have more than one delimiter (e.g., "foo/hello/world" is invalid)
 in order to maintain the flat key space.
 
-It assumes the space is already claimed via "spaces-cli claim".
+It assumes the space is already claimed via "blob-cli claim".
 Otherwise, the set transaction will fail.
 
 # claims the space "hello.avax"
 # "hello.avax" is the space (or namespace)
-$ spaces-cli claim hello.avax
+$ blob-cli claim hello.avax
 <<COMMENT
 success
 COMMENT
@@ -43,14 +43,14 @@ COMMENT
 # "hello.avax" is the space (or namespace)
 # "foo" is the key
 # "hello world" is the value
-$ spaces-cli set hello.avax/foo "hello world"
+$ blob-cli set hello.avax/foo "hello world"
 <<COMMENT
 success
 COMMENT
 
 # The existing key-value cannot be overwritten by a different owner.
 # The space must be claimed before it allows key-value writes.
-$ spaces-cli set hello.avax/foo "hello world" --private-key-file=.different-key
+$ blob-cli set hello.avax/foo "hello world" --private-key-file=.different-key
 <<COMMENT
 error
 COMMENT

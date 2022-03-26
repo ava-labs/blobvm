@@ -8,7 +8,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 
-	"github.com/ava-labs/spacesvm/chain"
+	"github.com/ava-labs/blobvm/chain"
 )
 
 // txEntry is used to track the work transactions pay to be included in the

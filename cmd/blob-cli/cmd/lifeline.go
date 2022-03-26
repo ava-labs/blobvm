@@ -13,9 +13,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/client"
-	"github.com/ava-labs/spacesvm/parser"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/client"
+	"github.com/ava-labs/blobvm/parser"
 )
 
 var lifelineCmd = &cobra.Command{

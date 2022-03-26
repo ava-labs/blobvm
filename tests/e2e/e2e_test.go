@@ -21,15 +21,15 @@ import (
 	ginkgo "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/client"
-	"github.com/ava-labs/spacesvm/parser"
-	"github.com/ava-labs/spacesvm/tests"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/client"
+	"github.com/ava-labs/blobvm/parser"
+	"github.com/ava-labs/blobvm/tests"
 )
 
 func TestIntegration(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "spacesvm integration test suites")
+	ginkgo.RunSpecs(t, "blobvm integration test suites")
 }
 
 var (

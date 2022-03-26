@@ -14,8 +14,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fatih/color"
 
-	"github.com/ava-labs/spacesvm/chain"
-	"github.com/ava-labs/spacesvm/tdata"
+	"github.com/ava-labs/blobvm/chain"
+	"github.com/ava-labs/blobvm/tdata"
 )
 
 func PPInfo(info *chain.SpaceInfo) {

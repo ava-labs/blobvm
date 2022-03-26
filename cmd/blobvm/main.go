@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/ava-labs/avalanchego/vms/rpcchainvm"
-	"github.com/ava-labs/spacesvm/cmd/spacesvm/version"
-	"github.com/ava-labs/spacesvm/vm"
+	"github.com/ava-labs/blobvm/cmd/blobvm/version"
+	"github.com/ava-labs/blobvm/vm"
 	"github.com/hashicorp/go-plugin"
 	log "github.com/inconshreveable/log15"
 	"github.com/spf13/cobra"
@@ -27,9 +27,9 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:        "spacesvm",
+	Use:        "blobvm",
 	Short:      "SpacesVM agent",
-	SuggestFor: []string{"spacesvm"},
+	SuggestFor: []string{"blobvm"},
 	RunE:       runFunc,
 }
 
@@ -45,7 +45,7 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "spacesvm failed %v\n", err)
+		fmt.Fprintf(os.Stderr, "blobvm failed %v\n", err)
 		os.Exit(1)
 	}
 	os.Exit(0)

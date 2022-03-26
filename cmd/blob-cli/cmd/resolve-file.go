@@ -12,8 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/spacesvm/client"
-	"github.com/ava-labs/spacesvm/tree"
+	"github.com/ava-labs/blobvm/client"
+	"github.com/ava-labs/blobvm/tree"
 )
 
 var resolveFileCmd = &cobra.Command{

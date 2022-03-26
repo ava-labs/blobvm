@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ava-labs/spacesvm/parser"
-	"github.com/ava-labs/spacesvm/tdata"
+	"github.com/ava-labs/blobvm/parser"
+	"github.com/ava-labs/blobvm/tdata"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 

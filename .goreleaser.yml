@@ -1,8 +1,8 @@
 # ref. https://goreleaser.com/customization/build/
 builds:
-  - id: spaces-cli
-    main: ./cmd/spaces-cli
-    binary: spaces-cli
+  - id: blob-cli
+    main: ./cmd/blob-cli
+    binary: blob-cli
     flags:
       - -v
     # TODO: remove this once we support 32-bit in avalanchego
@@ -15,9 +15,9 @@ builds:
         goarch: 386
       - goos: freebsd
         goarch: 386
-  - id: spacesvm
-    main: ./cmd/spacesvm
-    binary: spacesvm
+  - id: blobvm
+    main: ./cmd/blobvm
+    binary: blobvm
     flags:
       - -v
     # TODO: remove this once we support 32-bit in avalanchego
@@ -34,4 +34,4 @@ builds:
 release:
   github:
     owner: ava-labs
-    name: spacesvm
+    name: blobvm

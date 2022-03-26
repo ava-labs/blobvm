@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/spacesvm/client"
+	"github.com/ava-labs/blobvm/client"
 )
 
 var activityCmd = &cobra.Command{
