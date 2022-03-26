@@ -1,0 +1,98 @@
+# https://golangci-lint.run/usage/configuration/
+run:
+  timeout: 10m
+  # skip auto-generated files.
+  skip-files:
+    - ".*\\.pb\\.go$"
+
+issues:
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+
+# https://golangci-lint.run/usage/linters
+linters:
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forcetypeassert
+    - goconst
+    - gocritic
+    - gofmt
+    - gofumpt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ifshort
+    - ineffassign
+    - interfacer # https://github.com/mvdan/interfacer archived by the owner
+    - lll
+    - misspell
+    - nakedret
+    - nestif
+    - noctx
+    - nolintlint
+    - prealloc
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - tagliatelle
+    - tenv
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - wastedassign
+    - whitespace
+    # - cyclop
+    # - exhaustivestruct
+    # - forbidigo
+    # - funlen
+    # - gocognit
+    # - godot
+    # - goerr113
+    # - gomnd
+    # - nilerr
+    # - nlreturn
+    # - paralleltest
+    # - testpackage
+    # - varnamelen
+    # - wrapcheck
+    # - wsl
+
+linters-settings:
+  gocritic:
+    disabled-checks:
+      - appendAssign
+  dogsled:
+    max-blank-identifiers: 3
+  staticcheck:
+    go: "1.17"
+    # https://staticcheck.io/docs/options#checks
+    checks:
+      - "all"
+      - "-SA6002" # argument should be pointer-like to avoid allocation, for sync.Pool
+      - "-SA1019" # deprecated packages e.g., golang.org/x/crypto/ripemd160
