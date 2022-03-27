@@ -186,7 +186,7 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 				claimed, _, meta, err := inst.cli.Resolve(context.Background(), space)
 				gomega.Ω(err).To(gomega.BeNil())
 				gomega.Ω(claimed).Should(gomega.BeTrue())
-				fmt.Printf("%+v\n", *meta)
+				fmt.Printf("%+v\n", meta.TxID)
 			}
 		})
 	})

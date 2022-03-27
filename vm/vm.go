@@ -118,7 +118,6 @@ func (vm *VM) Initialize(
 	vm.builderStop = make(chan struct{})
 	vm.doneBuild = make(chan struct{})
 	vm.doneGossip = make(chan struct{})
-
 	vm.appSender = appSender
 	vm.network = vm.NewPushNetwork()
 
