@@ -20,6 +20,7 @@ var (
 	ErrInvalidPrice           = errors.New("invalid price")
 	ErrInsufficientSurplus    = errors.New("insufficient surplus fee")
 	ErrParentBlockNotVerified = errors.New("parent block not verified or accepted")
+	ErrInvalidRandom          = errors.New("invalid random value")
 
 	// Tx Correctness
 	ErrInvalidBlockID      = errors.New("invalid blockID")

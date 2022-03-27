@@ -26,6 +26,7 @@ type StatefulBlock struct {
 	Hght   uint64         `serialize:"true" json:"height"`
 	Price  uint64         `serialize:"true" json:"price"`
 	Cost   uint64         `serialize:"true" json:"cost"`
+	Random string         `serialize:"true" json:"random"`
 	Txs    []*Transaction `serialize:"true" json:"txs"`
 }
 
@@ -39,8 +40,6 @@ type StatelessBlock struct {
 	st    choices.Status
 	t     time.Time
 	bytes []byte
-
-	Winners map[ids.ID]*Activity
 
 	vm         VM
 	children   []*StatelessBlock
@@ -92,7 +91,6 @@ func ParseStatefulBlock(
 		bytes:         source,
 		st:            status,
 		vm:            vm,
-		Winners:       map[ids.ID]*Activity{},
 	}
 	id, err := ids.ToID(crypto.Keccak256(b.bytes))
 	if err != nil {
@@ -109,7 +107,6 @@ func ParseStatefulBlock(
 }
 
 func (b *StatelessBlock) init() error {
-	b.Winners = map[ids.ID]*Activity{}
 	bytes, err := Marshal(b.StatefulBlock)
 	if err != nil {
 		return err
@@ -180,6 +177,20 @@ func (b *StatelessBlock) verify() (*StatelessBlock, *versiondb.Database, error) 
 		return nil, nil, err
 	}
 	onAcceptDB := versiondb.New(parentState)
+
+	// Select random value and hash
+	v := SelectNextValueKey(onAcceptDB, b.Hght)
+	val, exists, err := GetValue(onAcceptDB, v)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !exists {
+		return nil, nil, ErrKeyMissing
+	}
+	pid := [32]byte(parent.ID())
+	if b.Random != ValueHash(append(val, pid[:]...)) {
+		return nil, nil, ErrInvalidRandom
+	}
 
 	// Process new transactions
 	log.Debug("build context", "height", b.Hght, "price", b.Price, "cost", b.Cost)

@@ -40,6 +40,18 @@ func BuildBlock(vm VM, preferred ids.ID) (snowman.Block, error) {
 	}
 	vdb := versiondb.New(parentDB)
 
+	// Select random value and hash
+	v := SelectNextValueKey(vdb, b.Hght)
+	val, exists, err := GetValue(vdb, v)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, ErrKeyMissing
+	}
+	pid := [32]byte(parent.ID())
+	b.Random = ValueHash(append(val, pid[:]...))
+
 	b.Txs = []*Transaction{}
 	units := uint64(0)
 

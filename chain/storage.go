@@ -4,15 +4,19 @@
 package chain
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ethereum/go-ethereum/common"
 	smath "github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/crypto"
+	log "github.com/inconshreveable/log15"
 
 	"github.com/ava-labs/blobvm/parser"
 )
@@ -333,4 +337,29 @@ func ModifyBalance(db database.KeyValueReaderWriter, address common.Address, add
 		return 0, fmt.Errorf("%w: bal=%d, addr=%v, add=%t, prev=%d, change=%d", ErrInvalidBalance, b, address, add, b, change)
 	}
 	return n, SetBalance(db, address, n)
+}
+
+func SelectNextValueKey(db database.Database, index uint64) []byte {
+	seed := new(big.Int).SetUint64(index).Bytes()
+	iterator := crypto.Keccak256(seed)
+
+	startKey := ValueKey(iterator)
+	baseKey := ValueKey(nil)
+	cursor := db.NewIteratorWithStart(startKey)
+	defer cursor.Release()
+	for cursor.Next() {
+		curKey := cursor.Key()
+		if bytes.Compare(baseKey, curKey) < -1 { // startKey < curKey; continue search
+			continue
+		}
+		if !bytes.Contains(curKey, baseKey) { // curKey does not contain base key; end search
+			break
+		}
+
+		return curKey[2:]
+	}
+
+	// No reward applied
+	log.Debug("skipping value selection: no valid key")
+	return nil
 }
