@@ -342,6 +342,15 @@ var _ = ginkgo.Describe("Tx Types", func() {
 				gomega.Ω(instances[1].vm.Mempool().Len()).Should(gomega.Equal(0))
 			})
 		})
+
+		ginkgo.By("transfer funds to other sender (simple)", func() {
+			createIssueTx(instances[0], &chain.Input{
+				Typ:   chain.Transfer,
+				To:    sender2,
+				Units: 100,
+			}, priv)
+			expectBlkAccept(instances[0])
+		})
 	})
 
 	// TODO: full replicate blocks between nodes
@@ -385,39 +394,6 @@ func createIssueTx(i instance, input *chain.Input, signer *ecdsa.PrivateKey) {
 
 	_, err = i.cli.IssueTx(context.Background(), td, sig)
 	gomega.Ω(err).To(gomega.BeNil())
-}
-
-func asyncBlockPush(i instance, c chan struct{}) {
-	timer := time.NewTicker(500 * time.Millisecond)
-	for {
-		select {
-		case <-c:
-			return
-		case <-timer.C:
-			// manually signal ready
-			i.builder.NotifyBuild()
-			// manually ack ready sig as in engine
-			<-i.toEngine
-
-			blk, err := i.vm.BuildBlock()
-			if err != nil {
-				continue
-			}
-
-			gomega.Ω(blk.Verify()).To(gomega.BeNil())
-			gomega.Ω(blk.Status()).To(gomega.Equal(choices.Processing))
-
-			err = i.vm.SetPreference(blk.ID())
-			gomega.Ω(err).To(gomega.BeNil())
-
-			gomega.Ω(blk.Accept()).To(gomega.BeNil())
-			gomega.Ω(blk.Status()).To(gomega.Equal(choices.Accepted))
-
-			lastAccepted, err := i.vm.LastAccepted()
-			gomega.Ω(err).To(gomega.BeNil())
-			gomega.Ω(lastAccepted).To(gomega.Equal(blk.ID()))
-		}
-	}
 }
 
 func expectBlkAccept(i instance) {
