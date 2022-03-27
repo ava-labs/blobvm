@@ -33,7 +33,6 @@ func TestIntegration(t *testing.T) {
 var (
 	requestTimeout  time.Duration
 	clusterInfoPath string
-	logDebug        bool
 	shutdown        bool
 )
 
@@ -49,12 +48,6 @@ func init() {
 		"cluster-info-path",
 		"",
 		"cluster info YAML file path (as defined in 'tests/cluster_info.go')",
-	)
-	flag.BoolVar(
-		&logDebug,
-		"log-debug",
-		true,
-		"set to 'false' to disable debug logging",
 	)
 	flag.BoolVar(
 		&shutdown,
