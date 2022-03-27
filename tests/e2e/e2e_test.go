@@ -184,10 +184,9 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 			time.Sleep(5 * time.Second) // enough time to be propagated to all nodes
 			for _, inst := range instances {
 				color.Blue("checking space on %q", inst.uri)
-				claimed, _, meta, err := inst.cli.Resolve(context.Background(), vh)
+				claimed, _, _, err := inst.cli.Resolve(context.Background(), vh)
 				gomega.Ω(err).To(gomega.BeNil())
 				gomega.Ω(claimed).Should(gomega.BeTrue())
-				fmt.Printf("%+v\n", meta.TxID)
 			}
 		})
 	})
