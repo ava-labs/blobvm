@@ -155,7 +155,7 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 	})
 
 	ginkgo.It("Claim/SetTx in a single node (raw)", func() {
-		space := fmt.Sprintf("%064x", 1000000)
+		space := fmt.Sprintf("0x%064x", 1000000)
 		vh := chain.ValueHash(([]byte(space)))
 		ginkgo.By("mine and issue ClaimTx to the first node", func() {
 			claimTx := &chain.SetTx{
