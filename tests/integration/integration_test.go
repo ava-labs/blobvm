@@ -31,6 +31,7 @@ import (
 
 	"github.com/ava-labs/blobvm/chain"
 	"github.com/ava-labs/blobvm/client"
+	"github.com/ava-labs/blobvm/tdata"
 	"github.com/ava-labs/blobvm/vm"
 )
 
@@ -304,10 +305,143 @@ var _ = ginkgo.Describe("Tx Types", func() {
 			gomega.Ω(err).To(gomega.BeNil())
 			gomega.Ω(exists).To(gomega.BeTrue())
 		})
+
+		ginkgo.By("transfer funds to other sender", func() {
+			transferTx := &chain.TransferTx{
+				BaseTx: &chain.BaseTx{},
+				To:     sender2,
+				Units:  100,
+			}
+			createIssueRawTx(instances[0], transferTx, priv)
+			expectBlkAccept(instances[0])
+		})
+
+		space = fmt.Sprintf("0x%064x", 1000001)
+		ginkgo.By("fail Gossip SetTx to a stale node when missing previous blocks", func() {
+			setTx := &chain.SetTx{
+				BaseTx: &chain.BaseTx{},
+				Value:  []byte(space),
+			}
+
+			ginkgo.By("issue SetTx", func() {
+				ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+				_, _, err := client.SignIssueRawTx(ctx, instances[0].cli, setTx, priv)
+				cancel()
+				gomega.Ω(err).Should(gomega.BeNil())
+			})
+
+			// since the block from previous test spec has not been replicated yet
+			ginkgo.By("send gossip from node 0 to 1 should fail on server-side since 1 doesn't have the block yet", func() {
+				newTxs := instances[0].vm.Mempool().NewTxs(genesis.TargetBlockSize)
+				gomega.Ω(len(newTxs)).To(gomega.Equal(1))
+
+				err := instances[0].vm.Network().GossipNewTxs(newTxs)
+				gomega.Ω(err).Should(gomega.BeNil())
+
+				// mempool in 1 should be empty, since gossip/submit failed
+				gomega.Ω(instances[1].vm.Mempool().Len()).Should(gomega.Equal(0))
+			})
+		})
 	})
 
 	// TODO: full replicate blocks between nodes
 })
+
+func createIssueRawTx(i instance, utx chain.UnsignedTransaction, signer *ecdsa.PrivateKey) {
+	g, err := i.cli.Genesis(context.Background())
+	gomega.Ω(err).Should(gomega.BeNil())
+	utx.SetMagic(g.Magic)
+
+	la, err := i.cli.Accepted(context.Background())
+	gomega.Ω(err).Should(gomega.BeNil())
+	utx.SetBlockID(la)
+
+	price, blockCost, err := i.cli.SuggestedRawFee(context.Background())
+	gomega.Ω(err).Should(gomega.BeNil())
+	utx.SetPrice(price + blockCost/utx.FeeUnits(g))
+
+	dh, err := chain.DigestHash(utx)
+	gomega.Ω(err).Should(gomega.BeNil())
+	sig, err := chain.Sign(dh, signer)
+	gomega.Ω(err).Should(gomega.BeNil())
+
+	tx := chain.NewTx(utx, sig)
+	err = tx.Init(genesis)
+	gomega.Ω(err).To(gomega.BeNil())
+
+	_, err = i.cli.IssueRawTx(context.Background(), tx.Bytes())
+	gomega.Ω(err).To(gomega.BeNil())
+}
+
+func createIssueTx(i instance, input *chain.Input, signer *ecdsa.PrivateKey) {
+	td, _, err := i.cli.SuggestedFee(context.Background(), input)
+	gomega.Ω(err).Should(gomega.BeNil())
+
+	dh, err := tdata.DigestHash(td)
+	gomega.Ω(err).Should(gomega.BeNil())
+
+	sig, err := chain.Sign(dh, signer)
+	gomega.Ω(err).Should(gomega.BeNil())
+
+	_, err = i.cli.IssueTx(context.Background(), td, sig)
+	gomega.Ω(err).To(gomega.BeNil())
+}
+
+func asyncBlockPush(i instance, c chan struct{}) {
+	timer := time.NewTicker(500 * time.Millisecond)
+	for {
+		select {
+		case <-c:
+			return
+		case <-timer.C:
+			// manually signal ready
+			i.builder.NotifyBuild()
+			// manually ack ready sig as in engine
+			<-i.toEngine
+
+			blk, err := i.vm.BuildBlock()
+			if err != nil {
+				continue
+			}
+
+			gomega.Ω(blk.Verify()).To(gomega.BeNil())
+			gomega.Ω(blk.Status()).To(gomega.Equal(choices.Processing))
+
+			err = i.vm.SetPreference(blk.ID())
+			gomega.Ω(err).To(gomega.BeNil())
+
+			gomega.Ω(blk.Accept()).To(gomega.BeNil())
+			gomega.Ω(blk.Status()).To(gomega.Equal(choices.Accepted))
+
+			lastAccepted, err := i.vm.LastAccepted()
+			gomega.Ω(err).To(gomega.BeNil())
+			gomega.Ω(lastAccepted).To(gomega.Equal(blk.ID()))
+		}
+	}
+}
+
+func expectBlkAccept(i instance) {
+	// manually signal ready
+	i.builder.NotifyBuild()
+	// manually ack ready sig as in engine
+	<-i.toEngine
+
+	blk, err := i.vm.BuildBlock()
+	gomega.Ω(err).To(gomega.BeNil())
+
+	gomega.Ω(blk.Verify()).To(gomega.BeNil())
+	gomega.Ω(blk.Status()).To(gomega.Equal(choices.Processing))
+
+	err = i.vm.SetPreference(blk.ID())
+	gomega.Ω(err).To(gomega.BeNil())
+
+	gomega.Ω(blk.Accept()).To(gomega.BeNil())
+	gomega.Ω(blk.Status()).To(gomega.Equal(choices.Accepted))
+
+	lastAccepted, err := i.vm.LastAccepted()
+	gomega.Ω(err).To(gomega.BeNil())
+	gomega.Ω(lastAccepted).To(gomega.Equal(blk.ID()))
+}
 
 var _ common.AppSender = &appSender{}
 
