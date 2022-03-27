@@ -15,8 +15,8 @@ import (
 )
 
 var resolveCmd = &cobra.Command{
-	Use:   "resolve [options] space/key",
-	Short: "Reads a value at space/key",
+	Use:   "resolve [options] key",
+	Short: "Reads a value at key",
 	RunE:  resolveFunc,
 }
 

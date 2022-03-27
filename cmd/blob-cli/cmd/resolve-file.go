@@ -17,7 +17,7 @@ import (
 )
 
 var resolveFileCmd = &cobra.Command{
-	Use:   "resolve-file [options] <space/key> <output path>",
+	Use:   "resolve-file [options] <key> <output path>",
 	Short: "Reads a file at space/key and saves it to disk",
 	RunE:  resolveFileFunc,
 }

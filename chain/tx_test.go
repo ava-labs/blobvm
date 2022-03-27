@@ -7,7 +7,6 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/ava-labs/avalanchego/database/memdb"
@@ -25,11 +24,11 @@ func TestTransaction(t *testing.T) {
 
 	found := ids.NewSet(3)
 	g := DefaultGenesis()
-	for i := range []int{0, 1, 2} {
+	for _, i := range []string{"0", "1", "2"} {
 		tx := &Transaction{
-			UnsignedTransaction: &ClaimTx{
+			UnsignedTransaction: &SetTx{
 				BaseTx: &BaseTx{},
-				Space:  strings.Repeat("b", i*10),
+				Value:  []byte(i),
 			},
 		}
 		fmt.Println(tx.UnsignedTransaction.TypedData())
@@ -118,12 +117,12 @@ func createTestTx(t *testing.T, blockID ids.ID, priv *ecdsa.PrivateKey) *Transac
 	t.Helper()
 
 	tx := &Transaction{
-		UnsignedTransaction: &ClaimTx{
+		UnsignedTransaction: &SetTx{
 			BaseTx: &BaseTx{
 				BlockID: blockID,
 				Price:   10,
 			},
-			Space: "a",
+			Value: []byte("a"),
 		},
 	}
 	dh, err := DigestHash(tx.UnsignedTransaction)

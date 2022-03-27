@@ -4,17 +4,10 @@
 package chain
 
 import (
-	"fmt"
 	"strconv"
 
-	"github.com/ava-labs/blobvm/parser"
 	"github.com/ava-labs/blobvm/tdata"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-)
-
-const (
-	// 0x + hex-encoded hash
-	HashLen = 66
 )
 
 var _ UnsignedTransaction = &SetTx{}
@@ -22,28 +15,11 @@ var _ UnsignedTransaction = &SetTx{}
 type SetTx struct {
 	*BaseTx `serialize:"true" json:"baseTx"`
 
-	// Space is the namespace for the "SpaceInfo"
-	// whose owner can write and read value for the
-	// specific key space.
-	// The space must be ^[a-z0-9]{1,256}$.
-	Space string `serialize:"true" json:"space"`
-
-	// Key is parsed from the given input, with its space removed.
-	Key string `serialize:"true" json:"key"`
-
-	// Value is written as the key-value pair to the storage. If a previous value
-	// exists, it is overwritten.
 	Value []byte `serialize:"true" json:"value"`
 }
 
 func (s *SetTx) Execute(t *TransactionContext) error {
 	g := t.Genesis
-	if err := parser.CheckContents(s.Space); err != nil {
-		return err
-	}
-	if err := parser.CheckContents(s.Key); err != nil {
-		return err
-	}
 	switch {
 	case len(s.Value) == 0:
 		return ErrValueEmpty
@@ -51,44 +27,22 @@ func (s *SetTx) Execute(t *TransactionContext) error {
 		return ErrValueTooBig
 	}
 
-	// Verify space is owned by sender
-	i, err := verifySpace(s.Space, t)
+	k := []byte(ValueHash(s.Value))
+
+	// Do not allow duplicate value setting
+	_, exists, err := GetValueMeta(t.Database, k)
 	if err != nil {
 		return err
 	}
-
-	// If Key is equal to hash length, ensure it is equal to the hash of the
-	// value
-	if len(s.Key) == HashLen {
-		h := valueHash(s.Value)
-		if s.Key != h {
-			return fmt.Errorf("%w: expected %s got %x", ErrInvalidKey, h, s.Key)
-		}
-	}
-
-	// Update value
-	valueSize := uint64(len(s.Value))
-	nvmeta := &ValueMeta{
-		Size:    valueSize,
-		TxID:    t.TxID,
-		Updated: t.BlockTime,
-	}
-	v, exists, err := GetValueMeta(t.Database, []byte(s.Space), []byte(s.Key))
-	if err != nil {
-		return err
-	}
-	timeRemaining := (i.Expiry - i.Updated) * i.Units
 	if exists {
-		i.Units -= valueUnits(g, v.Size) / g.ValueExpiryDiscount
-		nvmeta.Created = v.Created
-	} else {
-		nvmeta.Created = t.BlockTime
+		return ErrKeyExists
 	}
-	i.Units += valueUnits(g, valueSize) / g.ValueExpiryDiscount
-	if err := PutSpaceKey(t.Database, []byte(s.Space), []byte(s.Key), nvmeta); err != nil {
-		return err
-	}
-	return updateSpace(s.Space, t, timeRemaining, i)
+
+	return PutKey(t.Database, k, &ValueMeta{
+		Size:    uint64(len(s.Value)),
+		TxID:    t.TxID,
+		Created: t.BlockTime,
+	})
 }
 
 func (s *SetTx) FeeUnits(g *Genesis) uint64 {
@@ -106,8 +60,6 @@ func (s *SetTx) Copy() UnsignedTransaction {
 	copy(value, s.Value)
 	return &SetTx{
 		BaseTx: s.BaseTx.Copy(),
-		Space:  s.Space,
-		Key:    s.Key,
 		Value:  value,
 	}
 }
@@ -116,15 +68,11 @@ func (s *SetTx) TypedData() *tdata.TypedData {
 	return tdata.CreateTypedData(
 		s.Magic, Set,
 		[]tdata.Type{
-			{Name: tdSpace, Type: tdString},
-			{Name: tdKey, Type: tdString},
 			{Name: tdValue, Type: tdBytes},
 			{Name: tdPrice, Type: tdUint64},
 			{Name: tdBlockID, Type: tdString},
 		},
 		tdata.TypedDataMessage{
-			tdSpace:   s.Space,
-			tdKey:     s.Key,
 			tdValue:   hexutil.Encode(s.Value),
 			tdPrice:   strconv.FormatUint(s.Price, 10),
 			tdBlockID: s.BlockID.String(),
@@ -134,8 +82,7 @@ func (s *SetTx) TypedData() *tdata.TypedData {
 
 func (s *SetTx) Activity() *Activity {
 	return &Activity{
-		Typ:   Set,
-		Space: s.Space,
-		Key:   s.Key,
+		Typ: Set,
+		Key: ValueHash(s.Value),
 	}
 }

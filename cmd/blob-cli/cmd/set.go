@@ -13,12 +13,11 @@ import (
 
 	"github.com/ava-labs/blobvm/chain"
 	"github.com/ava-labs/blobvm/client"
-	"github.com/ava-labs/blobvm/parser"
 )
 
 var setCmd = &cobra.Command{
-	Use:   "set [options] <space/key> <value>",
-	Short: "Writes a key-value pair for the given space",
+	Use:   "set [options] <value>",
+	Short: "Writes a value to the db",
 	Long: `
 Issues "SetTx" to write a key-value pair.
 
@@ -64,45 +63,33 @@ func setFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	space, key, val, err := getSetOp(args)
+	val, err := getSetOp(args)
 	if err != nil {
 		return err
 	}
 
 	utx := &chain.SetTx{
 		BaseTx: &chain.BaseTx{},
-		Space:  space,
-		Key:    key,
 		Value:  val,
 	}
 
 	cli := client.New(uri, requestTimeout)
 	opts := []client.OpOption{client.WithPollTx()}
 	if verbose {
-		opts = append(opts, client.WithInfo(space))
 		opts = append(opts, client.WithBalance())
 	}
 	if _, _, err := client.SignIssueRawTx(context.Background(), cli, utx, priv, opts...); err != nil {
 		return err
 	}
 
-	color.Green("set %s in %s", key, space)
+	color.Green("set %s", chain.ValueHash(val))
 	return nil
 }
 
-func getSetOp(args []string) (space string, key string, val []byte, err error) {
-	if len(args) != 2 {
-		return "", "", nil, fmt.Errorf("expected exactly 2 arguments, got %d", len(args))
+func getSetOp(args []string) (val []byte, err error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("expected exactly 1 argument, got %d", len(args))
 	}
 
-	// [space/key] == "foo/bar"
-	spaceKey := args[0]
-
-	space, key, err = parser.ResolvePath(spaceKey)
-	if err != nil {
-		return "", "", nil, fmt.Errorf("%w: failed to parse space", err)
-	}
-
-	val = []byte(args[1])
-	return space, key, val, err
+	return []byte(args[0]), nil
 }

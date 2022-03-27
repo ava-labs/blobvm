@@ -67,9 +67,9 @@ var EIP712Domain = []Type{
 	{Name: "magic", Type: "uint64"},
 }
 
-func spacesDomain(m uint64) TypedDataDomain {
+func blobDomain(m uint64) TypedDataDomain {
 	return TypedDataDomain{
-		Name:  "Spaces",
+		Name:  "Blob",
 		Magic: strconv.FormatUint(m, 10),
 	}
 }
@@ -81,7 +81,7 @@ func CreateTypedData(magic uint64, txType string, txFields []Type, msg TypedData
 			"EIP712Domain": EIP712Domain,
 		},
 		PrimaryType: txType,
-		Domain:      spacesDomain(magic),
+		Domain:      blobDomain(magic),
 		Message:     msg,
 	}
 }

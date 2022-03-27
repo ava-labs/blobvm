@@ -40,20 +40,13 @@ func init() {
 	rootCmd.AddCommand(
 		createCmd,
 		genesisCmd,
-		claimCmd,
-		lifelineCmd,
 		setCmd,
-		deleteCmd,
 		resolveCmd,
-		infoCmd,
 		activityCmd,
 		transferCmd,
-		moveCmd,
 		setFileCmd,
 		resolveFileCmd,
-		deleteFileCmd,
 		networkCmd,
-		ownedCmd,
 	)
 
 	rootCmd.PersistentFlags().StringVar(

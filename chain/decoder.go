@@ -15,20 +15,12 @@ import (
 )
 
 const (
-	Claim    = "claim"
-	Lifeline = "lifeline"
 	Set      = "set"
-	Delete   = "delete"
-	Move     = "move"
 	Transfer = "transfer"
-
-	// Non-user created event
-	Reward = "reward"
 )
 
 type Input struct {
 	Typ   string         `json:"type"`
-	Space string         `json:"space"`
 	Key   string         `json:"key"`
 	Value []byte         `json:"value"`
 	To    common.Address `json:"to"`
@@ -37,35 +29,10 @@ type Input struct {
 
 func (i *Input) Decode() (UnsignedTransaction, error) {
 	switch i.Typ {
-	case Claim:
-		return &ClaimTx{
-			BaseTx: &BaseTx{},
-			Space:  i.Space,
-		}, nil
-	case Lifeline:
-		return &LifelineTx{
-			BaseTx: &BaseTx{},
-			Space:  i.Space,
-			Units:  i.Units,
-		}, nil
 	case Set:
 		return &SetTx{
 			BaseTx: &BaseTx{},
-			Space:  i.Space,
-			Key:    i.Key,
 			Value:  i.Value,
-		}, nil
-	case Delete:
-		return &DeleteTx{
-			BaseTx: &BaseTx{},
-			Space:  i.Space,
-			Key:    i.Key,
-		}, nil
-	case Move:
-		return &MoveTx{
-			BaseTx: &BaseTx{},
-			Space:  i.Space,
-			To:     i.To,
 		}, nil
 	case Transfer:
 		return &TransferTx{
@@ -87,8 +54,6 @@ const (
 	tdBlockID = "blockID"
 	tdPrice   = "price"
 
-	tdSpace = "space"
-	tdKey   = "key"
 	tdValue = "value"
 	tdUnits = "units"
 	tdTo    = "to"
@@ -129,31 +94,7 @@ func ParseTypedData(td *tdata.TypedData) (UnsignedTransaction, error) {
 	}
 
 	switch td.PrimaryType {
-	case Claim:
-		space, ok := td.Message[tdSpace].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdSpace)
-		}
-		return &ClaimTx{BaseTx: bTx, Space: space}, nil
-	case Lifeline:
-		space, ok := td.Message[tdSpace].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdSpace)
-		}
-		units, err := parseUint64Message(td, tdUnits)
-		if err != nil {
-			return nil, err
-		}
-		return &LifelineTx{BaseTx: bTx, Space: space, Units: units}, nil
 	case Set:
-		space, ok := td.Message[tdSpace].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdSpace)
-		}
-		key, ok := td.Message[tdKey].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdKey)
-		}
 		rvalue, ok := td.Message[tdValue].(string)
 		if !ok {
 			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdValue)
@@ -162,27 +103,7 @@ func ParseTypedData(td *tdata.TypedData) (UnsignedTransaction, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &SetTx{BaseTx: bTx, Space: space, Key: key, Value: value}, nil
-	case Delete:
-		space, ok := td.Message[tdSpace].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdSpace)
-		}
-		key, ok := td.Message[tdKey].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdKey)
-		}
-		return &DeleteTx{BaseTx: bTx, Space: space, Key: key}, nil
-	case Move:
-		space, ok := td.Message[tdSpace].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdSpace)
-		}
-		to, ok := td.Message[tdTo].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdTo)
-		}
-		return &MoveTx{BaseTx: bTx, Space: space, To: common.HexToAddress(to)}, nil
+		return &SetTx{BaseTx: bTx, Value: value}, nil
 	case Transfer:
 		to, ok := td.Message[tdTo].(string)
 		if !ok {

@@ -32,9 +32,9 @@ var (
 	// Execution Correctness
 	ErrValueEmpty      = errors.New("value empty")
 	ErrValueTooBig     = errors.New("value too big")
-	ErrSpaceExpired    = errors.New("space expired")
 	ErrKeyMissing      = errors.New("key missing")
 	ErrInvalidKey      = errors.New("key is invalid")
+	ErrKeyExists       = errors.New("key already exists")
 	ErrAddressMismatch = errors.New("address does not match decoded space")
 	ErrSpaceNotExpired = errors.New("space not expired")
 	ErrSpaceMissing    = errors.New("space missing")

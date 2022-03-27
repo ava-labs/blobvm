@@ -6,15 +6,12 @@ package chain
 import (
 	"bytes"
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/ava-labs/avalanchego/database/memdb"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-
-	"github.com/ava-labs/blobvm/parser"
 )
 
 func TestSetTx(t *testing.T) {
@@ -26,12 +23,6 @@ func TestSetTx(t *testing.T) {
 	}
 	sender := crypto.PubkeyToAddress(priv.PublicKey)
 
-	priv2, err := crypto.GenerateKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	sender2 := crypto.PubkeyToAddress(priv2.PublicKey)
-
 	db := memdb.New()
 	defer db.Close()
 
@@ -42,196 +33,30 @@ func TestSetTx(t *testing.T) {
 		sender    common.Address
 		err       error
 	}{
-		{ // write with no previous claim should fail
+		{ // write with value should succeed
 			utx: &SetTx{
 				BaseTx: &BaseTx{
 					BlockID: ids.GenerateTestID(),
 				},
-				Space: "foo",
-				Key:   "bar",
-				Value: []byte("value"),
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       ErrSpaceMissing,
-		},
-		{ // successful claim
-			utx: &ClaimTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       nil,
-		},
-		{ // write
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   "bar",
 				Value: []byte("value"),
 			},
 			blockTime: 1,
 			sender:    sender,
 			err:       nil,
 		},
-		{ // write empty
+		{ // write hashed value twice
 			utx: &SetTx{
 				BaseTx: &BaseTx{
 					BlockID: ids.GenerateTestID(),
 				},
-				Space: "foo",
-				Key:   "bar",
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       ErrValueEmpty,
-		},
-		{ // delete
-			utx: &DeleteTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   "bar",
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       nil,
-		},
-		{ // write hashed value
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   valueHash([]byte("value")),
 				Value: []byte("value"),
 			},
 			blockTime: 1,
 			sender:    sender,
-			err:       nil,
-		},
-		{ // write incorrect hashed value
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   valueHash([]byte("not value")),
-				Value: []byte("value"),
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       ErrInvalidKey,
-		},
-		{ // delete hashed value
-			utx: &DeleteTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   valueHash([]byte("value")),
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       nil,
-		},
-		{ // delete incorrect hashed value
-			utx: &DeleteTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   valueHash([]byte("not value")),
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       ErrKeyMissing,
-		},
-		{
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   "bar",
-				Value: []byte("value"),
-			},
-			blockTime: 1,
-			sender:    sender2,
-			err:       ErrUnauthorized,
-		},
-		{
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-			},
-			blockTime: 1,
-			err:       parser.ErrInvalidContents,
-		},
-		{
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   strings.Repeat("a", parser.MaxIdentifierSize+1),
-			},
-			blockTime: 1,
-			err:       parser.ErrInvalidContents,
-		},
-		{
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   "bar",
-				Value: bytes.Repeat([]byte{'b'}, int(g.MaxValueSize)+1),
-			},
-			blockTime: 1,
-			err:       ErrValueTooBig,
-		},
-		{
-			utx: &DeleteTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   "bar",
-			},
-			blockTime: 100,
-			sender:    sender,
-			err:       ErrKeyMissing,
-		},
-		{
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Space: "foo",
-				Key:   "bar",
-				Value: []byte("value"),
-			},
-			blockTime: int64(g.ClaimReward) * 2,
-			sender:    sender,
-			err:       ErrSpaceMissing,
+			err:       ErrKeyExists,
 		},
 	}
 	for i, tv := range tt {
-		if i > 0 {
-			// Expire old spaces between txs
-			if err := ExpireNext(db, tt[i-1].blockTime, tv.blockTime, true); err != nil {
-				t.Fatalf("#%d: ExpireNext errored %v", i, err)
-			}
-		}
 		// Set linked value (normally done in block processing)
 		id := ids.GenerateTestID()
 		if tp, ok := tv.utx.(*SetTx); ok {
@@ -258,19 +83,9 @@ func TestSetTx(t *testing.T) {
 
 		// check committed states from db
 		switch tp := tv.utx.(type) {
-		case *ClaimTx: // "ClaimTx.Execute" must persist "SpaceInfo"
-			info, exists, err := GetSpaceInfo(db, []byte(tp.Space))
-			if err != nil {
-				t.Fatalf("#%d: failed to get space info %v", i, err)
-			}
-			if !exists {
-				t.Fatalf("#%d: failed to find space info", i)
-			}
-			if !bytes.Equal(info.Owner[:], tv.sender[:]) {
-				t.Fatalf("#%d: unexpected owner found (expected pub key %q)", i, string(sender[:]))
-			}
 		case *SetTx:
-			vmeta, exists, err := GetValueMeta(db, []byte(tp.Space), []byte(tp.Key))
+			k := ValueHash(tp.Value)
+			vmeta, exists, err := GetValueMeta(db, []byte(k))
 			if err != nil {
 				t.Fatalf("#%d: failed to get meta info %v", i, err)
 			}
@@ -283,7 +98,7 @@ func TestSetTx(t *testing.T) {
 				}
 			}
 
-			val, exists, err := GetValue(db, []byte(tp.Space), []byte(tp.Key))
+			val, exists, err := GetValue(db, []byte(k))
 			if err != nil {
 				t.Fatalf("#%d: failed to get key info %v", i, err)
 			}
@@ -294,14 +109,6 @@ func TestSetTx(t *testing.T) {
 				if !bytes.Equal(tp.Value, val) {
 					t.Fatalf("#%d: unexpected value %q, expected %q", i, val, tp.Value)
 				}
-			}
-		case *DeleteTx:
-			_, exists, err := GetValue(db, []byte(tp.Space), []byte(tp.Key))
-			if err != nil {
-				t.Fatalf("#%d: failed to get key info %v", i, err)
-			}
-			if exists {
-				t.Fatalf("#%d: empty value should have deleted keys", i)
 			}
 		}
 	}
