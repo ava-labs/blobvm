@@ -27,7 +27,7 @@ func (s *SetTx) Execute(t *TransactionContext) error {
 		return ErrValueTooBig
 	}
 
-	k := []byte(valueHash(s.Value))
+	k := []byte(ValueHash(s.Value))
 
 	// Do not allow duplicate value setting
 	_, exists, err := GetValueMeta(t.Database, k)
@@ -83,6 +83,6 @@ func (s *SetTx) TypedData() *tdata.TypedData {
 func (s *SetTx) Activity() *Activity {
 	return &Activity{
 		Typ: Set,
-		Key: valueHash(s.Value),
+		Key: ValueHash(s.Value),
 	}
 }

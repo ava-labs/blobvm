@@ -21,7 +21,7 @@ func valueUnits(g *Genesis, size uint64) uint64 {
 	return size/g.ValueUnitSize + 1
 }
 
-func valueHash(v []byte) string {
+func ValueHash(v []byte) string {
 	h := common.BytesToHash(crypto.Keccak256(v)).Hex()
 	return strings.ToLower(h)
 }

@@ -84,7 +84,7 @@ func TestSetTx(t *testing.T) {
 		// check committed states from db
 		switch tp := tv.utx.(type) {
 		case *SetTx:
-			k := valueHash(tp.Value)
+			k := ValueHash(tp.Value)
 			vmeta, exists, err := GetValueMeta(db, []byte(k))
 			if err != nil {
 				t.Fatalf("#%d: failed to get meta info %v", i, err)
