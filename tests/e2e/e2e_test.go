@@ -193,8 +193,8 @@ var _ = ginkgo.Describe("[SetTx]", func() {
 		})
 	})
 
-	ginkgo.It("redundant SetTx to any node", func() {
-		ginkgo.By("issue SetTx to the first node", func() {
+	ginkgo.It("redundant SetTx should fail", func() {
+		ginkgo.By("issue SetTx to each node", func() {
 			setTx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
 				Value:  []byte(space),
@@ -209,8 +209,7 @@ var _ = ginkgo.Describe("[SetTx]", func() {
 					client.WithPollTx(),
 				)
 				cancel()
-				// gomega.Ω(err).Should(gomega.BeNil())
-				fmt.Println("err:", err)
+				gomega.Ω(err.Error()).Should(gomega.ContainSubstring(chain.ErrKeyExists.Error()))
 			}
 		})
 	})
