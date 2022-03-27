@@ -4,7 +4,6 @@
 package chain
 
 import (
-	"bytes"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -12,10 +11,6 @@ import (
 )
 
 var zeroAddress = (common.Address{})
-
-func (t *TransactionContext) authorized(owner common.Address) bool {
-	return bytes.Equal(owner[:], t.Sender[:])
-}
 
 func valueUnits(g *Genesis, size uint64) uint64 {
 	return size/g.ValueUnitSize + 1
