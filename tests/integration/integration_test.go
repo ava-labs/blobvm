@@ -254,13 +254,6 @@ var _ = ginkgo.Describe("Tx Types", func() {
 		gomega.Ω(len(activity)).To(gomega.Equal(0))
 	})
 
-	ginkgo.It("ensure nothing owned yet", func() {
-		spaces, err := instances[0].cli.Owned(context.Background(), sender)
-		gomega.Ω(err).To(gomega.BeNil())
-
-		gomega.Ω(len(spaces)).To(gomega.Equal(0))
-	})
-
 	ginkgo.It("get currently accepted block ID", func() {
 		for _, inst := range instances {
 			cli := inst.cli
@@ -270,10 +263,10 @@ var _ = ginkgo.Describe("Tx Types", func() {
 	})
 
 	ginkgo.It("Gossip ClaimTx to a different node", func() {
-		space := strings.Repeat("a", parser.MaxIdentifierSize)
-		claimTx := &chain.ClaimTx{
+		space := fmt.Sprintf("0x%064x", 1000000)
+		claimTx := &chain.SetTx{
 			BaseTx: &chain.BaseTx{},
-			Space:  space,
+			Value:  []byte(space),
 		}
 
 		ginkgo.By("mine and issue ClaimTx", func() {
@@ -314,23 +307,6 @@ var _ = ginkgo.Describe("Tx Types", func() {
 			gomega.Ω(lastAccepted).To(gomega.Equal(blk.ID()))
 		})
 
-		ginkgo.By("ensure something owned", func() {
-			spaces, err := instances[1].cli.Owned(context.Background(), sender)
-			gomega.Ω(err).To(gomega.BeNil())
-
-			gomega.Ω(spaces).To(gomega.Equal([]string{space}))
-		})
-
-		ginkgo.By("extend time with lifeline", func() {
-			lifelineTx := &chain.LifelineTx{
-				BaseTx: &chain.BaseTx{},
-				Space:  space,
-				Units:  1,
-			}
-			createIssueRawTx(instances[1], lifelineTx, priv)
-			expectBlkAccept(instances[1])
-		})
-
 		ginkgo.By("ensure all activity accounted for", func() {
 			activity, err := instances[1].cli.RecentActivity(context.Background())
 			gomega.Ω(err).To(gomega.BeNil())
@@ -338,20 +314,21 @@ var _ = ginkgo.Describe("Tx Types", func() {
 			gomega.Ω(len(activity)).To(gomega.Equal(2))
 			a0 := activity[0]
 			gomega.Ω(a0.Typ).To(gomega.Equal("lifeline"))
-			gomega.Ω(a0.Space).To(gomega.Equal(space))
+			gomega.Ω(a0.Key).To(gomega.Equal(space))
 			gomega.Ω(a0.Units).To(gomega.Equal(uint64(1)))
 			gomega.Ω(a0.Sender).To(gomega.Equal(sender.Hex()))
 			a1 := activity[1]
 			gomega.Ω(a1.Typ).To(gomega.Equal("claim"))
-			gomega.Ω(a1.Space).To(gomega.Equal(space))
+			gomega.Ω(a1.Key).To(gomega.Equal(space))
 			gomega.Ω(a1.Sender).To(gomega.Equal(sender.Hex()))
 		})
 	})
 
 	ginkgo.It("fail ClaimTx with no block ID", func() {
-		utx := &chain.ClaimTx{
+		space := fmt.Sprintf("0x%064x", 1000000)
+		utx := &chain.SetTx{
 			BaseTx: &chain.BaseTx{},
-			Space:  "foo",
+			Value:  []byte(space),
 		}
 
 		dh, err := chain.DigestHash(utx)
@@ -368,10 +345,10 @@ var _ = ginkgo.Describe("Tx Types", func() {
 	})
 
 	ginkgo.It("Claim/SetTx in a single node", func() {
-		space := strings.Repeat("b", parser.MaxIdentifierSize)
-		claimTx := &chain.ClaimTx{
+		space := fmt.Sprintf("0x%064x", 1000000)
+		claimTx := &chain.SetTx{
 			BaseTx: &chain.BaseTx{},
-			Space:  space,
+			Value:  []byte(space),
 		}
 
 		ginkgo.By("mine and accept block with the first ClaimTx", func() {

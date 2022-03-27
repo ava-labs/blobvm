@@ -173,7 +173,7 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 		})
 
 		ginkgo.By("check space to check if ClaimTx has been accepted from all nodes", func() {
-			time.Sleep(5 * time.Second) // enough time to be propagated to all nodes
+			time.Sleep(40 * time.Second) // enough time to be propagated to all nodes
 			for _, inst := range instances {
 				color.Blue("checking space on %q", inst.uri)
 				claimed, _, meta, err := inst.cli.Resolve(context.Background(), space)
