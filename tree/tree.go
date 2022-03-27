@@ -63,7 +63,6 @@ func Upload(
 		} else {
 			tx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
-				Key:    k,
 				Value:  chunk,
 			}
 			txID, cost, err := client.SignIssueRawTx(ctx, cli, tx, priv, opts...)
@@ -94,7 +93,6 @@ func Upload(
 	rk := strings.ToLower(common.Bytes2Hex(crypto.Keccak256(rb)))
 	tx := &chain.SetTx{
 		BaseTx: &chain.BaseTx{},
-		Key:    rk,
 		Value:  rb,
 	}
 	txID, cost, err := client.SignIssueRawTx(ctx, cli, tx, priv, opts...)
