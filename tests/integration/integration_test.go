@@ -19,6 +19,7 @@ import (
 	"github.com/ava-labs/avalanchego/database/manager"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
+	"github.com/ava-labs/avalanchego/snow/choices"
 	"github.com/ava-labs/avalanchego/snow/engine/common"
 	avago_version "github.com/ava-labs/avalanchego/version"
 	ecommon "github.com/ethereum/go-ethereum/common"
@@ -250,6 +251,59 @@ var _ = ginkgo.Describe("Tx Types", func() {
 			_, err := cli.Accepted(context.Background())
 			gomega.Ω(err).Should(gomega.BeNil())
 		}
+	})
+
+	space := fmt.Sprintf("0x%064x", 1000000)
+	vh := chain.ValueHash(([]byte(space)))
+	ginkgo.It("Gossip SetTx to a different node", func() {
+		setTx := &chain.SetTx{
+			BaseTx: &chain.BaseTx{},
+			Value:  []byte(space),
+		}
+
+		ginkgo.By("issue SetTx", func() {
+			ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+			_, _, err := client.SignIssueRawTx(ctx, instances[0].cli, setTx, priv)
+			cancel()
+			gomega.Ω(err).Should(gomega.BeNil())
+		})
+
+		ginkgo.By("send gossip from node 0 to 1", func() {
+			newTxs := instances[0].vm.Mempool().NewTxs(genesis.TargetBlockSize)
+			gomega.Ω(len(newTxs)).To(gomega.Equal(1))
+
+			err := instances[0].vm.Network().GossipNewTxs(newTxs)
+			gomega.Ω(err).Should(gomega.BeNil())
+		})
+
+		ginkgo.By("receive gossip in the node 1, and signal block build", func() {
+			instances[1].builder.NotifyBuild()
+			<-instances[1].toEngine
+		})
+
+		ginkgo.By("build block in the node 1", func() {
+			blk, err := instances[1].vm.BuildBlock()
+			gomega.Ω(err).To(gomega.BeNil())
+
+			gomega.Ω(blk.Verify()).To(gomega.BeNil())
+			gomega.Ω(blk.Status()).To(gomega.Equal(choices.Processing))
+
+			err = instances[1].vm.SetPreference(blk.ID())
+			gomega.Ω(err).To(gomega.BeNil())
+
+			gomega.Ω(blk.Accept()).To(gomega.BeNil())
+			gomega.Ω(blk.Status()).To(gomega.Equal(choices.Accepted))
+
+			lastAccepted, err := instances[1].vm.LastAccepted()
+			gomega.Ω(err).To(gomega.BeNil())
+			gomega.Ω(lastAccepted).To(gomega.Equal(blk.ID()))
+		})
+
+		ginkgo.By("ensure key is already set", func() {
+			exists, _, _, err := instances[1].cli.Resolve(context.Background(), vh)
+			gomega.Ω(err).To(gomega.BeNil())
+			gomega.Ω(exists).To(gomega.BeTrue())
+		})
 	})
 
 	// TODO: full replicate blocks between nodes
