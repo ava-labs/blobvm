@@ -58,10 +58,6 @@ func (vm *VM) Accepted(b *chain.StatelessBlock) {
 		activity.Tmstmp = b.Tmstmp
 		vm.activityCache[vm.activityCacheCursor%cs] = activity
 		vm.activityCacheCursor++
-		if reward, ok := b.Winners[tx.ID()]; ok {
-			vm.activityCache[vm.activityCacheCursor%cs] = reward
-			vm.activityCacheCursor++
-		}
 	}
 }
 
