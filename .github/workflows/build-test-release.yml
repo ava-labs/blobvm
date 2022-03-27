@@ -24,14 +24,14 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: scripts/tests.unit.sh
+      - name: Run integration tests
+        shell: bash
+        run: scripts/tests.integration.sh
       - name: Run e2e tests
         shell: bash
         run: scripts/run.sh 1.7.8
         env:
           E2E: true
-      - name: Run integration tests
-        shell: bash
-        run: scripts/tests.integration.sh
       - name: Run GoReleaser for cross-platform builds
         uses: goreleaser/goreleaser-action@v2
         with:
