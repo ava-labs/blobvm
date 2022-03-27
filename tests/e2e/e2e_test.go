@@ -145,7 +145,7 @@ var _ = ginkgo.Describe("[Network]", func() {
 	})
 })
 
-var _ = ginkgo.Describe("[Claim/SetTx]", func() {
+var _ = ginkgo.Describe("[SetTx]", func() {
 	ginkgo.It("get currently accepted block ID", func() {
 		for _, inst := range instances {
 			cli := inst.cli
@@ -154,11 +154,11 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 		}
 	})
 
-	ginkgo.It("Claim/SetTx in a single node (raw)", func() {
-		space := fmt.Sprintf("0x%064x", 1000000)
-		vh := chain.ValueHash(([]byte(space)))
-		ginkgo.By("mine and issue ClaimTx to the first node", func() {
-			claimTx := &chain.SetTx{
+	space := fmt.Sprintf("0x%064x", 1000000)
+	vh := chain.ValueHash(([]byte(space)))
+	ginkgo.It("SetTx in a single node (raw)", func() {
+		ginkgo.By("issue SetTx to the first node", func() {
+			setTx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
 				Value:  []byte(space),
 			}
@@ -172,7 +172,7 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 			_, _, err = client.SignIssueRawTx(
 				ctx,
 				instances[0].cli,
-				claimTx,
+				setTx,
 				priv,
 				client.WithPollTx(),
 			)
@@ -180,13 +180,37 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 			gomega.Ω(err).Should(gomega.BeNil())
 		})
 
-		ginkgo.By("check space to check if ClaimTx has been accepted from all nodes", func() {
-			time.Sleep(5 * time.Second) // enough time to be propagated to all nodes
+		ginkgo.By("check space to check if SetTx has been accepted from all nodes", func() {
+			// enough time to be propagated to all nodes
+			time.Sleep(5 * time.Second)
+
 			for _, inst := range instances {
 				color.Blue("checking space on %q", inst.uri)
 				claimed, _, _, err := inst.cli.Resolve(context.Background(), vh)
 				gomega.Ω(err).To(gomega.BeNil())
 				gomega.Ω(claimed).Should(gomega.BeTrue())
+			}
+		})
+	})
+
+	ginkgo.It("redundant SetTx to any node", func() {
+		ginkgo.By("issue SetTx to the first node", func() {
+			setTx := &chain.SetTx{
+				BaseTx: &chain.BaseTx{},
+				Value:  []byte(space),
+			}
+			for _, inst := range instances {
+				ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+				_, _, err := client.SignIssueRawTx(
+					ctx,
+					inst.cli,
+					setTx,
+					priv,
+					client.WithPollTx(),
+				)
+				cancel()
+				// gomega.Ω(err).Should(gomega.BeNil())
+				fmt.Println("err:", err)
 			}
 		})
 	})
