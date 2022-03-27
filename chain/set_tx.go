@@ -4,10 +4,8 @@
 package chain
 
 import (
-	"fmt"
 	"strconv"
 
-	"github.com/ava-labs/blobvm/parser"
 	"github.com/ava-labs/blobvm/tdata"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
@@ -17,19 +15,11 @@ var _ UnsignedTransaction = &SetTx{}
 type SetTx struct {
 	*BaseTx `serialize:"true" json:"baseTx"`
 
-	// Key is parsed from the given input, with its space removed.
-	Key string `serialize:"true" json:"key"`
-
-	// Value is written as the key-value pair to the storage. If a previous value
-	// exists, it is overwritten.
 	Value []byte `serialize:"true" json:"value"`
 }
 
 func (s *SetTx) Execute(t *TransactionContext) error {
 	g := t.Genesis
-	if err := parser.CheckContents(s.Key); err != nil {
-		return err
-	}
 	switch {
 	case len(s.Value) == 0:
 		return ErrValueEmpty
@@ -37,13 +27,10 @@ func (s *SetTx) Execute(t *TransactionContext) error {
 		return ErrValueTooBig
 	}
 
-	h := valueHash(s.Value)
-	if s.Key != h {
-		return fmt.Errorf("%w: expected %s got %x", ErrInvalidKey, h, s.Key)
-	}
+	k := []byte(valueHash(s.Value))
 
 	// Do not allow duplicate value setting
-	_, exists, err := GetValueMeta(t.Database, []byte(s.Key))
+	_, exists, err := GetValueMeta(t.Database, k)
 	if err != nil {
 		return err
 	}
@@ -51,7 +38,7 @@ func (s *SetTx) Execute(t *TransactionContext) error {
 		return ErrKeyExists
 	}
 
-	return PutKey(t.Database, []byte(s.Key), &ValueMeta{
+	return PutKey(t.Database, k, &ValueMeta{
 		Size:    uint64(len(s.Value)),
 		TxID:    t.TxID,
 		Created: t.BlockTime,
@@ -73,7 +60,6 @@ func (s *SetTx) Copy() UnsignedTransaction {
 	copy(value, s.Value)
 	return &SetTx{
 		BaseTx: s.BaseTx.Copy(),
-		Key:    s.Key,
 		Value:  value,
 	}
 }
@@ -82,13 +68,11 @@ func (s *SetTx) TypedData() *tdata.TypedData {
 	return tdata.CreateTypedData(
 		s.Magic, Set,
 		[]tdata.Type{
-			{Name: tdKey, Type: tdString},
 			{Name: tdValue, Type: tdBytes},
 			{Name: tdPrice, Type: tdUint64},
 			{Name: tdBlockID, Type: tdString},
 		},
 		tdata.TypedDataMessage{
-			tdKey:     s.Key,
 			tdValue:   hexutil.Encode(s.Value),
 			tdPrice:   strconv.FormatUint(s.Price, 10),
 			tdBlockID: s.BlockID.String(),
@@ -99,6 +83,6 @@ func (s *SetTx) TypedData() *tdata.TypedData {
 func (s *SetTx) Activity() *Activity {
 	return &Activity{
 		Typ: Set,
-		Key: s.Key,
+		Key: valueHash(s.Value),
 	}
 }

@@ -6,7 +6,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/ava-labs/blobvm/chain"
-	"github.com/ava-labs/blobvm/parser"
 	"github.com/ava-labs/blobvm/tdata"
 	"github.com/ava-labs/blobvm/vm"
 )
@@ -34,14 +32,10 @@ type Client interface {
 	// Accepted fetches the ID of the last accepted block.
 	Accepted(ctx context.Context) (ids.ID, error)
 
-	// Returns if a space is already claimed
-	Claimed(ctx context.Context, space string) (bool, error)
-	// Returns the corresponding space information.
-	Info(ctx context.Context, space string) (*chain.SpaceInfo, []*chain.KeyValueMeta, error)
 	// Balance returns the balance of an account
 	Balance(ctx context.Context, addr common.Address) (bal uint64, err error)
 	// Resolve returns the value associated with a path
-	Resolve(ctx context.Context, path string) (exists bool, value []byte, valueMeta *chain.ValueMeta, err error)
+	Resolve(ctx context.Context, key string) (exists bool, value []byte, valueMeta *chain.ValueMeta, err error)
 
 	// Requests the suggested price and cost from VM.
 	SuggestedRawFee(ctx context.Context) (uint64, uint64, error)
@@ -61,8 +55,6 @@ type Client interface {
 
 	// Recent actions on the network (sorted from recent to oldest)
 	RecentActivity(ctx context.Context) ([]*chain.Activity, error)
-	// All spaces owned by a given address
-	Owned(ctx context.Context, owner common.Address) ([]string, error)
 }
 
 // New creates a new client object.
@@ -115,32 +107,6 @@ func (cli *client) Genesis(ctx context.Context) (*chain.Genesis, error) {
 		resp,
 	)
 	return resp.Genesis, err
-}
-
-func (cli *client) Claimed(ctx context.Context, space string) (bool, error) {
-	resp := new(vm.ClaimedReply)
-	if err := cli.req.SendRequest(
-		ctx,
-		"claimed",
-		&vm.ClaimedArgs{Space: space},
-		resp,
-	); err != nil {
-		return false, err
-	}
-	return resp.Claimed, nil
-}
-
-func (cli *client) Info(ctx context.Context, space string) (*chain.SpaceInfo, []*chain.KeyValueMeta, error) {
-	resp := new(vm.InfoReply)
-	if err := cli.req.SendRequest(
-		ctx,
-		"info",
-		&vm.InfoArgs{Space: space},
-		resp,
-	); err != nil {
-		return nil, nil, err
-	}
-	return resp.Info, resp.Values, nil
 }
 
 func (cli *client) Accepted(ctx context.Context) (ids.ID, error) {
@@ -244,13 +210,13 @@ done:
 	return false, ctx.Err()
 }
 
-func (cli *client) Resolve(ctx context.Context, path string) (bool, []byte, *chain.ValueMeta, error) {
+func (cli *client) Resolve(ctx context.Context, key string) (bool, []byte, *chain.ValueMeta, error) {
 	resp := new(vm.ResolveReply)
 	if err := cli.req.SendRequest(
 		ctx,
 		"resolve",
 		&vm.ResolveArgs{
-			Path: path,
+			Key: key,
 		},
 		resp,
 	); err != nil {
@@ -261,20 +227,10 @@ func (cli *client) Resolve(ctx context.Context, path string) (bool, []byte, *cha
 		return false, nil, nil, nil
 	}
 
-	// If we are here, path is valid
-	k := strings.Split(path, parser.Delimiter)[1]
-
-	// Ensure we are not served malicious chunks
-	if len(k) == chain.HashLen {
-		if k != strings.ToLower(common.Bytes2Hex(crypto.Keccak256(resp.Value))) {
-			return false, nil, nil, ErrIntegrityFailure
-		}
+	if key != strings.ToLower(common.Bytes2Hex(crypto.Keccak256(resp.Value))) {
+		return false, nil, nil, ErrIntegrityFailure
 	}
 	return true, resp.Value, resp.ValueMeta, nil
-}
-
-func (cli *client) IssueTxHR(ctx context.Context, d []byte, sig []byte) (ids.ID, error) {
-	return ids.ID{}, errors.New("not implemented")
 }
 
 func (cli *client) Balance(ctx context.Context, addr common.Address) (bal uint64, err error) {
@@ -303,19 +259,4 @@ func (cli *client) RecentActivity(ctx context.Context) (activity []*chain.Activi
 		return nil, err
 	}
 	return resp.Activity, nil
-}
-
-func (cli *client) Owned(ctx context.Context, addr common.Address) (spaces []string, err error) {
-	resp := new(vm.OwnedReply)
-	if err = cli.req.SendRequest(
-		ctx,
-		"owned",
-		&vm.OwnedArgs{
-			Address: addr,
-		},
-		resp,
-	); err != nil {
-		return nil, err
-	}
-	return resp.Spaces, nil
 }

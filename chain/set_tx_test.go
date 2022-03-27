@@ -33,24 +33,11 @@ func TestSetTx(t *testing.T) {
 		sender    common.Address
 		err       error
 	}{
-		{ // write with invalid key should fail
+		{ // write with value should succeed
 			utx: &SetTx{
 				BaseTx: &BaseTx{
 					BlockID: ids.GenerateTestID(),
 				},
-				Key:   "bar",
-				Value: []byte("value"),
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       ErrInvalidKey,
-		},
-		{ // write hashed value
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Key:   valueHash([]byte("value")),
 				Value: []byte("value"),
 			},
 			blockTime: 1,
@@ -62,24 +49,11 @@ func TestSetTx(t *testing.T) {
 				BaseTx: &BaseTx{
 					BlockID: ids.GenerateTestID(),
 				},
-				Key:   valueHash([]byte("value")),
 				Value: []byte("value"),
 			},
 			blockTime: 1,
 			sender:    sender,
 			err:       ErrKeyExists,
-		},
-		{ // write incorrect hashed value
-			utx: &SetTx{
-				BaseTx: &BaseTx{
-					BlockID: ids.GenerateTestID(),
-				},
-				Key:   valueHash([]byte("not value")),
-				Value: []byte("value"),
-			},
-			blockTime: 1,
-			sender:    sender,
-			err:       ErrInvalidKey,
 		},
 	}
 	for i, tv := range tt {
@@ -110,7 +84,8 @@ func TestSetTx(t *testing.T) {
 		// check committed states from db
 		switch tp := tv.utx.(type) {
 		case *SetTx:
-			vmeta, exists, err := GetValueMeta(db, []byte(tp.Key))
+			k := valueHash(tp.Value)
+			vmeta, exists, err := GetValueMeta(db, []byte(k))
 			if err != nil {
 				t.Fatalf("#%d: failed to get meta info %v", i, err)
 			}
@@ -123,7 +98,7 @@ func TestSetTx(t *testing.T) {
 				}
 			}
 
-			val, exists, err := GetValue(db, []byte(tp.Key))
+			val, exists, err := GetValue(db, []byte(k))
 			if err != nil {
 				t.Fatalf("#%d: failed to get key info %v", i, err)
 			}

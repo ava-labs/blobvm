@@ -28,7 +28,6 @@ func TestTransaction(t *testing.T) {
 		tx := &Transaction{
 			UnsignedTransaction: &SetTx{
 				BaseTx: &BaseTx{},
-				Key:    valueHash([]byte(i)),
 				Value:  []byte(i),
 			},
 		}
@@ -123,7 +122,6 @@ func createTestTx(t *testing.T, blockID ids.ID, priv *ecdsa.PrivateKey) *Transac
 				BlockID: blockID,
 				Price:   10,
 			},
-			Key:   valueHash([]byte("a")),
 			Value: []byte("a"),
 		},
 	}

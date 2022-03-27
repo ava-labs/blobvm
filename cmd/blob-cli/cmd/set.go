@@ -17,8 +17,8 @@ import (
 )
 
 var setCmd = &cobra.Command{
-	Use:   "set [options] <space/key> <value>",
-	Short: "Writes a key-value pair for the given space",
+	Use:   "set [options] <value>",
+	Short: "Writes a value to the db",
 	Long: `
 Issues "SetTx" to write a key-value pair.
 

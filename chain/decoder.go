@@ -32,7 +32,6 @@ func (i *Input) Decode() (UnsignedTransaction, error) {
 	case Set:
 		return &SetTx{
 			BaseTx: &BaseTx{},
-			Key:    i.Key,
 			Value:  i.Value,
 		}, nil
 	case Transfer:
@@ -55,7 +54,6 @@ const (
 	tdBlockID = "blockID"
 	tdPrice   = "price"
 
-	tdKey   = "key"
 	tdValue = "value"
 	tdUnits = "units"
 	tdTo    = "to"
@@ -97,10 +95,6 @@ func ParseTypedData(td *tdata.TypedData) (UnsignedTransaction, error) {
 
 	switch td.PrimaryType {
 	case Set:
-		key, ok := td.Message[tdKey].(string)
-		if !ok {
-			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdKey)
-		}
 		rvalue, ok := td.Message[tdValue].(string)
 		if !ok {
 			return nil, fmt.Errorf("%w: %s", ErrTypedDataKeyMissing, tdValue)
@@ -109,7 +103,7 @@ func ParseTypedData(td *tdata.TypedData) (UnsignedTransaction, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &SetTx{BaseTx: bTx, Key: key, Value: value}, nil
+		return &SetTx{BaseTx: bTx, Value: value}, nil
 	case Transfer:
 		to, ok := td.Message[tdTo].(string)
 		if !ok {

@@ -8,7 +8,6 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -17,14 +16,6 @@ import (
 	"github.com/ava-labs/blobvm/chain"
 	"github.com/ava-labs/blobvm/tdata"
 )
-
-func PPInfo(info *chain.SpaceInfo) {
-	expiry := time.Unix(int64(info.Expiry), 0)
-	color.Cyan(
-		"raw space %s: units=%d expiry=%v (%v remaining)",
-		info.RawSpace, info.Units, expiry, time.Until(expiry),
-	)
-}
 
 func PPActivity(a []*chain.Activity) error {
 	if len(a) == 0 {
@@ -154,15 +145,6 @@ func handleConfirmation(
 		}
 	}
 
-	if len(ret.space) > 0 {
-		info, _, err := cli.Info(ctx, ret.space)
-		if err != nil {
-			color.Red("cannot get space info %v", err)
-			return err
-		}
-		PPInfo(info)
-	}
-
 	if ret.balance {
 		addr := crypto.PubkeyToAddress(priv.PublicKey)
 		b, err := cli.Balance(ctx, addr)
@@ -177,7 +159,6 @@ func handleConfirmation(
 
 type Op struct {
 	pollTx  bool
-	space   string
 	balance bool
 }
 
@@ -192,11 +173,6 @@ func (op *Op) applyOpts(opts []OpOption) {
 // "true" to poll transaction for its confirmation.
 func WithPollTx() OpOption {
 	return func(op *Op) { op.pollTx = true }
-}
-
-// Non-empty to print out space information.
-func WithInfo(space string) OpOption {
-	return func(op *Op) { op.space = space }
 }
 
 func WithBalance() OpOption {
