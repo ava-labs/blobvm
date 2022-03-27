@@ -54,6 +54,10 @@ func main() {
 // TODO: serve separate endpoint for range query
 // e.g., GET http://localhost/vm/foo returns "bar"
 func runFunc(cmd *cobra.Command, args []string) error {
+	// for debugging
+	root := log.Root()
+	root.SetHandler(log.LvlFilterHandler(log.LvlDebug, root.GetHandler()))
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: rpcchainvm.Handshake,
 		Plugins: map[string]plugin.Plugin{

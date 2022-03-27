@@ -17,7 +17,6 @@ import (
 	ecommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fatih/color"
-	log "github.com/inconshreveable/log15"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
@@ -108,11 +107,6 @@ var _ = ginkgo.BeforeSuite(func() {
 	genesis, err = instances[0].cli.Genesis(context.Background())
 	gomega.Ω(err).Should(gomega.BeNil())
 	color.Blue("created clients with %+v", clusterInfo)
-
-	if logDebug {
-		root := log.Root()
-		root.SetHandler(log.LvlFilterHandler(log.LvlDebug, root.GetHandler()))
-	}
 })
 
 var _ = ginkgo.AfterSuite(func() {
