@@ -155,7 +155,8 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 	})
 
 	ginkgo.It("Claim/SetTx in a single node (raw)", func() {
-		space := fmt.Sprintf("0x%064x", 1000000)
+		space := fmt.Sprintf("%064x", 1000000)
+		vh := chain.ValueHash(([]byte(space)))
 		ginkgo.By("mine and issue ClaimTx to the first node", func() {
 			claimTx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
@@ -183,7 +184,7 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 			time.Sleep(40 * time.Second) // enough time to be propagated to all nodes
 			for _, inst := range instances {
 				color.Blue("checking space on %q", inst.uri)
-				claimed, _, meta, err := inst.cli.Resolve(context.Background(), space)
+				claimed, _, meta, err := inst.cli.Resolve(context.Background(), vh)
 				gomega.Ω(err).To(gomega.BeNil())
 				gomega.Ω(claimed).Should(gomega.BeTrue())
 				fmt.Printf("%+v\n", meta.TxID)
