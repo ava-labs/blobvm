@@ -356,16 +356,6 @@ var _ = ginkgo.Describe("Tx Types", func() {
 			expectBlkAccept(instances[0])
 		})
 
-		ginkgo.By("ensure everything owned", func() {
-			spaces, err := instances[0].cli.Owned(context.Background(), sender)
-			gomega.Ω(err).To(gomega.BeNil())
-
-			gomega.Ω(spaces).To(gomega.ContainElements(
-				strings.Repeat("a", parser.MaxIdentifierSize),
-				strings.Repeat("b", parser.MaxIdentifierSize),
-			))
-		})
-
 		ginkgo.By("check space after ClaimTx has been accepted", func() {
 			pf, values, err := instances[0].cli.Info(context.Background(), space)
 			gomega.Ω(err).To(gomega.BeNil())
@@ -375,12 +365,9 @@ var _ = ginkgo.Describe("Tx Types", func() {
 			gomega.Ω(len(values)).To(gomega.Equal(0))
 		})
 
-		k, v := "avaxkvm", []byte("hello")
 		setTx := &chain.SetTx{
 			BaseTx: &chain.BaseTx{},
-			Space:  space,
-			Key:    k,
-			Value:  v,
+			Value:  []byte(space),
 		}
 
 		ginkgo.By("accept block with a new SetTx", func() {
@@ -389,18 +376,8 @@ var _ = ginkgo.Describe("Tx Types", func() {
 		})
 
 		ginkgo.By("read back from VM with range query", func() {
-			_, kvs, err := instances[0].cli.Info(context.Background(), space)
+			_, _, _, err := instances[0].cli.Resolve(context.Background(), space)
 			gomega.Ω(err).To(gomega.BeNil())
-			gomega.Ω(kvs[0].Key).To(gomega.Equal(k))
-			gomega.Ω(kvs[0].ValueMeta.Size).To(gomega.Equal(uint64(5)))
-		})
-
-		ginkgo.By("read back from VM with resolve", func() {
-			exists, value, valueMeta, err := instances[0].cli.Resolve(context.Background(), space+"/"+k)
-			gomega.Ω(err).To(gomega.BeNil())
-			gomega.Ω(exists).To(gomega.BeTrue())
-			gomega.Ω(value).To(gomega.Equal(v))
-			gomega.Ω(valueMeta.Size).To(gomega.Equal(uint64(5)))
 		})
 
 		ginkgo.By("transfer funds to other sender", func() {
@@ -410,16 +387,6 @@ var _ = ginkgo.Describe("Tx Types", func() {
 				Units:  100,
 			}
 			createIssueRawTx(instances[0], transferTx, priv)
-			expectBlkAccept(instances[0])
-		})
-
-		ginkgo.By("move space to other sender", func() {
-			moveTx := &chain.MoveTx{
-				BaseTx: &chain.BaseTx{},
-				To:     sender2,
-				Space:  space,
-			}
-			createIssueRawTx(instances[0], moveTx, priv)
 			expectBlkAccept(instances[0])
 		})
 

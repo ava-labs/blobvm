@@ -82,8 +82,6 @@ type VM struct {
 	builderStop chan struct{}
 	doneBuild   chan struct{}
 	doneGossip  chan struct{}
-	donePrune   chan struct{}
-	doneCompact chan struct{}
 }
 
 const (
@@ -120,8 +118,6 @@ func (vm *VM) Initialize(
 	vm.builderStop = make(chan struct{})
 	vm.doneBuild = make(chan struct{})
 	vm.doneGossip = make(chan struct{})
-	vm.donePrune = make(chan struct{})
-	vm.doneCompact = make(chan struct{})
 
 	vm.appSender = appSender
 	vm.network = vm.NewPushNetwork()
@@ -234,8 +230,6 @@ func (vm *VM) Shutdown() error {
 	close(vm.stop)
 	<-vm.doneBuild
 	<-vm.doneGossip
-	<-vm.donePrune
-	<-vm.doneCompact
 	if vm.ctx == nil {
 		return nil
 	}
