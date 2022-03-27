@@ -207,59 +207,8 @@ func (svc *PublicService) SuggestedRawFee(
 	return nil
 }
 
-type ClaimedArgs struct {
-	Space string `serialize:"true" json:"space"`
-}
-
-type ClaimedReply struct {
-	Claimed bool `serialize:"true" json:"claimed"`
-}
-
-func (svc *PublicService) Claimed(_ *http.Request, args *ClaimedArgs, reply *ClaimedReply) error {
-	if err := parser.CheckContents(args.Space); err != nil {
-		return err
-	}
-	has, err := chain.HasSpace(svc.vm.db, []byte(args.Space))
-	if err != nil {
-		return err
-	}
-	reply.Claimed = has
-	return nil
-}
-
-type InfoArgs struct {
-	Space string `serialize:"true" json:"space"`
-}
-
-type InfoReply struct {
-	Info   *chain.SpaceInfo      `serialize:"true" json:"info"`
-	Values []*chain.KeyValueMeta `serialize:"true" json:"values"`
-}
-
-func (svc *PublicService) Info(_ *http.Request, args *InfoArgs, reply *InfoReply) error {
-	if err := parser.CheckContents(args.Space); err != nil {
-		return err
-	}
-
-	i, exists, err := chain.GetSpaceInfo(svc.vm.db, []byte(args.Space))
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return chain.ErrSpaceMissing
-	}
-
-	kvs, err := chain.GetAllValueMetas(svc.vm.db, i.RawSpace)
-	if err != nil {
-		return err
-	}
-	reply.Info = i
-	reply.Values = kvs
-	return nil
-}
-
 type ResolveArgs struct {
-	Path string `serialize:"true" json:"path"`
+	Key string `serialize:"true" json:"key"`
 }
 
 type ResolveReply struct {
@@ -269,12 +218,10 @@ type ResolveReply struct {
 }
 
 func (svc *PublicService) Resolve(_ *http.Request, args *ResolveArgs, reply *ResolveReply) error {
-	space, key, err := parser.ResolvePath(args.Path)
-	if err != nil {
+	if err := parser.CheckContents(args.Key); err != nil {
 		return err
 	}
-
-	vmeta, exists, err := chain.GetValueMeta(svc.vm.db, []byte(space), []byte(key))
+	vmeta, exists, err := chain.GetValueMeta(svc.vm.db, []byte(args.Key))
 	if err != nil {
 		return err
 	}
@@ -282,7 +229,7 @@ func (svc *PublicService) Resolve(_ *http.Request, args *ResolveArgs, reply *Res
 		// Avoid value lookup if doesn't exist
 		return nil
 	}
-	v, exists, err := chain.GetValue(svc.vm.db, []byte(space), []byte(key))
+	v, exists, err := chain.GetValue(svc.vm.db, []byte(args.Key))
 	if err != nil {
 		return err
 	}
@@ -337,22 +284,5 @@ func (svc *PublicService) RecentActivity(_ *http.Request, _ *struct{}, reply *Re
 		activity = append(activity, item)
 	}
 	reply.Activity = activity
-	return nil
-}
-
-type OwnedArgs struct {
-	Address common.Address `serialize:"true" json:"address"`
-}
-
-type OwnedReply struct {
-	Spaces []string `serialize:"true" json:"spaces"`
-}
-
-func (svc *PublicService) Owned(_ *http.Request, args *OwnedArgs, reply *OwnedReply) error {
-	spaces, err := chain.GetAllOwned(svc.vm.db, args.Address)
-	if err != nil {
-		return err
-	}
-	reply.Spaces = spaces
 	return nil
 }

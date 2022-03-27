@@ -57,10 +57,12 @@ func Upload(
 		k := strings.ToLower(common.Bytes2Hex(crypto.Keccak256(chunk)))
 		if _, ok := uploaded[k]; ok {
 			color.Yellow("already uploaded k=%s, skipping", k)
+		} else if exists, _, _, err := cli.Resolve(ctx, k); err == nil && exists {
+			color.Yellow("already on-chain k=%s, skipping", k)
+			uploaded[k] = struct{}{}
 		} else {
 			tx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
-				Space:  space,
 				Key:    k,
 				Value:  chunk,
 			}
@@ -92,7 +94,6 @@ func Upload(
 	rk := strings.ToLower(common.Bytes2Hex(crypto.Keccak256(rb)))
 	tx := &chain.SetTx{
 		BaseTx: &chain.BaseTx{},
-		Space:  space,
 		Key:    rk,
 		Value:  rb,
 	}
@@ -153,57 +154,5 @@ func Download(ctx context.Context, cli client.Client, path string, f io.Writer) 
 		amountDownloaded += size
 	}
 	color.Yellow("download path=%s size=%fMB", path, float64(amountDownloaded)/units.MiB)
-	return nil
-}
-
-// Delete all hashes under a root
-func Delete(ctx context.Context, cli client.Client, path string, priv *ecdsa.PrivateKey) error {
-	exists, rb, _, err := cli.Resolve(ctx, path)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("%w:%s", ErrMissing, path)
-	}
-	var r Root
-	if err := json.Unmarshal(rb, &r); err != nil {
-		return err
-	}
-	// Path must be formatted correctly if made it here
-	spl := strings.Split(path, parser.Delimiter)
-	space := spl[0]
-	root := spl[1]
-	opts := []client.OpOption{client.WithPollTx()}
-	totalCost := uint64(0)
-	deleted := map[string]struct{}{}
-	for _, h := range r.Children {
-		if _, ok := deleted[h]; ok {
-			color.Yellow("already deleted k=%s, skipping", h)
-			continue
-		}
-		tx := &chain.DeleteTx{
-			BaseTx: &chain.BaseTx{},
-			Space:  space,
-			Key:    h,
-		}
-		txID, cost, err := client.SignIssueRawTx(ctx, cli, tx, priv, opts...)
-		if err != nil {
-			return err
-		}
-		totalCost += cost
-		color.Yellow("deleted k=%s txID=%s cost=%d totalCost=%d", h, txID, cost, totalCost)
-		deleted[h] = struct{}{}
-	}
-	tx := &chain.DeleteTx{
-		BaseTx: &chain.BaseTx{},
-		Space:  space,
-		Key:    root,
-	}
-	txID, cost, err := client.SignIssueRawTx(ctx, cli, tx, priv, opts...)
-	if err != nil {
-		return err
-	}
-	totalCost += cost
-	color.Yellow("deleted root=%s txID=%s cost=%d totalCost=%d", path, txID, cost, totalCost)
 	return nil
 }

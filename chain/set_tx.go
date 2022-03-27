@@ -12,11 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-const (
-	// 0x + hex-encoded hash
-	HashLen = 66
-)
-
 var _ UnsignedTransaction = &SetTx{}
 
 type SetTx struct {
@@ -40,10 +35,6 @@ func (s *SetTx) Execute(t *TransactionContext) error {
 		return ErrValueEmpty
 	case uint64(len(s.Value)) > g.MaxValueSize:
 		return ErrValueTooBig
-	}
-
-	if len(s.Key) != HashLen {
-		return ErrInvalidKey
 	}
 
 	h := valueHash(s.Value)
