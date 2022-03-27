@@ -17,6 +17,7 @@ import (
 	ecommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fatih/color"
+	log "github.com/inconshreveable/log15"
 	ginkgo "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
@@ -33,6 +34,7 @@ func TestIntegration(t *testing.T) {
 var (
 	requestTimeout  time.Duration
 	clusterInfoPath string
+	logDebug        bool
 	shutdown        bool
 )
 
@@ -48,6 +50,12 @@ func init() {
 		"cluster-info-path",
 		"",
 		"cluster info YAML file path (as defined in 'tests/cluster_info.go')",
+	)
+	flag.BoolVar(
+		&logDebug,
+		"log-debug",
+		true,
+		"set to 'false' to disable debug logging",
 	)
 	flag.BoolVar(
 		&shutdown,
@@ -100,6 +108,11 @@ var _ = ginkgo.BeforeSuite(func() {
 	genesis, err = instances[0].cli.Genesis(context.Background())
 	gomega.Ω(err).Should(gomega.BeNil())
 	color.Blue("created clients with %+v", clusterInfo)
+
+	if logDebug {
+		root := log.Root()
+		root.SetHandler(log.LvlFilterHandler(log.LvlDebug, root.GetHandler()))
+	}
 })
 
 var _ = ginkgo.AfterSuite(func() {
