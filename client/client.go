@@ -6,6 +6,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -229,7 +230,7 @@ func (cli *client) Resolve(ctx context.Context, key string) (bool, []byte, *chai
 	}
 
 	if key != strings.ToLower(common.Bytes2Hex(crypto.Keccak256(resp.Value))) {
-		return false, nil, nil, ErrIntegrityFailure
+		return false, nil, nil, fmt.Errorf("key %q, value: %q, %v", key, resp.Value, crypto.Keccak256(resp.Value))
 	}
 	return true, resp.Value, resp.ValueMeta, nil
 }
