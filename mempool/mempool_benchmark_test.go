@@ -65,19 +65,19 @@ func createTestMempool(
 	g := chain.DefaultGenesis()
 	txs := make([]*chain.Transaction, n)
 	for i := 0; i < n; i++ {
-		spc := make([]byte, 8)
-		_, err := rand.Read(spc)
+		buf := make([]byte, 8)
+		_, err := rand.Read(buf)
 		if err != nil {
 			b.Fatal(err)
 		}
-		space := append([]byte(fmt.Sprintf("0x%056x", i)), spc...)
+		val := append([]byte(fmt.Sprintf("0x%056x", i)), buf...)
 
 		tx := &chain.Transaction{
 			UnsignedTransaction: &chain.SetTx{
 				BaseTx: &chain.BaseTx{
 					BlockID: blks[i%blksN],
 				},
-				Value: space,
+				Value: val,
 			},
 		}
 		sig, err := chain.Sign(tx.DigestHash(), priv)
