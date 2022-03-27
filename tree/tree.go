@@ -131,24 +131,20 @@ func Download(ctx context.Context, cli client.Client, path string, f io.Writer) 
 		return ErrEmpty
 	}
 
-	// Path must be formatted correctly if made it here
-	space := strings.Split(path, parser.Delimiter)[0]
-
 	amountDownloaded := 0
 	for _, h := range r.Children {
-		chunk := space + parser.Delimiter + h
-		exists, b, _, err := cli.Resolve(ctx, chunk)
+		exists, b, _, err := cli.Resolve(ctx, h)
 		if err != nil {
 			return err
 		}
 		if !exists {
-			return fmt.Errorf("%w:%s", ErrMissing, chunk)
+			return fmt.Errorf("%w:%s", ErrMissing, h)
 		}
 		if _, err := f.Write(b); err != nil {
 			return err
 		}
 		size := len(b)
-		color.Yellow("downloaded chunk=%s size=%fKB", chunk, float64(size)/units.KiB)
+		color.Yellow("downloaded chunk=%s size=%fKB", h, float64(size)/units.KiB)
 		amountDownloaded += size
 	}
 	color.Yellow("download path=%s size=%fMB", path, float64(amountDownloaded)/units.MiB)
