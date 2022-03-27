@@ -204,6 +204,7 @@ done:
 			continue
 		}
 		if confirmed {
+			color.Green("confirmed transaction %v", txID)
 			return true, nil
 		}
 	}

@@ -158,8 +158,7 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 			claimed, _, meta, err := instances[0].cli.Resolve(context.Background(), space)
 			gomega.Ω(err).Should(gomega.BeNil())
 			gomega.Ω(claimed).Should(gomega.BeFalse())
-			fmt.Println("claimed:", claimed)
-			fmt.Println("meta:", meta)
+			gomega.Ω(meta).Should(gomega.BeNil())
 
 			ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 			_, _, err = client.SignIssueRawTx(
@@ -171,7 +170,6 @@ var _ = ginkgo.Describe("[Claim/SetTx]", func() {
 			)
 			cancel()
 			gomega.Ω(err).Should(gomega.BeNil())
-
 		})
 
 		ginkgo.By("check space to check if ClaimTx has been accepted from all nodes", func() {
