@@ -147,16 +147,16 @@ var _ = ginkgo.Describe("[SetTx]", func() {
 		}
 	})
 
-	space := fmt.Sprintf("0x%064x", 1000000)
-	vh := chain.ValueHash(([]byte(space)))
+	v := []byte(fmt.Sprintf("0x%064x", 1000000))
+	vh := chain.ValueHash(v)
 	ginkgo.It("SetTx in a single node (raw)", func() {
 		ginkgo.By("issue SetTx to the first node", func() {
 			setTx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
-				Value:  []byte(space),
+				Value:  v,
 			}
 
-			claimed, _, meta, err := instances[0].cli.Resolve(context.Background(), space)
+			claimed, _, meta, err := instances[0].cli.Resolve(context.Background(), vh)
 			gomega.Ω(err).Should(gomega.BeNil())
 			gomega.Ω(claimed).Should(gomega.BeFalse())
 			gomega.Ω(meta).Should(gomega.BeNil())
@@ -190,7 +190,7 @@ var _ = ginkgo.Describe("[SetTx]", func() {
 		ginkgo.By("issue SetTx to each node", func() {
 			setTx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
-				Value:  []byte(space),
+				Value:  v,
 			}
 			for _, inst := range instances {
 				ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
