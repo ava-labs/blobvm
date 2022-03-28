@@ -141,7 +141,10 @@ func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash,
 	if !exists {
 		return common.Hash{}, ErrKeyMissing
 	}
-	return ValueHash(append(val, pid[:]...)), nil
+
+	rand := ValueHash(append(val, pid[:]...))
+	log.Debug("generated random %v from parent=%x key=%v", rand, pid[:], v)
+	return rand, nil
 }
 
 // verify checks the correctness of a block and then returns the
