@@ -13,7 +13,6 @@ import (
 	log "github.com/inconshreveable/log15"
 
 	"github.com/ava-labs/blobvm/chain"
-	"github.com/ava-labs/blobvm/parser"
 	"github.com/ava-labs/blobvm/tdata"
 )
 
@@ -208,7 +207,7 @@ func (svc *PublicService) SuggestedRawFee(
 }
 
 type ResolveArgs struct {
-	Key string `serialize:"true" json:"key"`
+	Key common.Hash `serialize:"true" json:"key"`
 }
 
 type ResolveReply struct {
@@ -218,10 +217,7 @@ type ResolveReply struct {
 }
 
 func (svc *PublicService) Resolve(_ *http.Request, args *ResolveArgs, reply *ResolveReply) error {
-	if err := parser.CheckContents(args.Key); err != nil {
-		return err
-	}
-	vmeta, exists, err := chain.GetValueMeta(svc.vm.db, []byte(args.Key))
+	vmeta, exists, err := chain.GetValueMeta(svc.vm.db, args.Key)
 	if err != nil {
 		return err
 	}
@@ -229,7 +225,7 @@ func (svc *PublicService) Resolve(_ *http.Request, args *ResolveArgs, reply *Res
 		// Avoid value lookup if doesn't exist
 		return nil
 	}
-	v, exists, err := chain.GetValue(svc.vm.db, []byte(args.Key))
+	v, exists, err := chain.GetValue(svc.vm.db, args.Key)
 	if err != nil {
 		return err
 	}

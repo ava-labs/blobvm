@@ -16,8 +16,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	smath "github.com/ethereum/go-ethereum/common/math"
 	log "github.com/inconshreveable/log15"
-
-	"github.com/ava-labs/blobvm/parser"
 )
 
 // 0x0/ (block hashes)
@@ -38,6 +36,8 @@ const (
 	balancePrefix = 0x4
 
 	linkedTxLRUSize = 512
+
+	ByteDelimiter byte = '/'
 )
 
 var (
@@ -49,7 +49,7 @@ var (
 func PrefixBlockKey(blockID ids.ID) (k []byte) {
 	k = make([]byte, 2+len(blockID))
 	k[0] = blockPrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], blockID[:])
 	return k
 }
@@ -58,7 +58,7 @@ func PrefixBlockKey(blockID ids.ID) (k []byte) {
 func PrefixTxKey(txID ids.ID) (k []byte) {
 	k = make([]byte, 2+len(txID))
 	k[0] = txPrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], txID[:])
 	return k
 }
@@ -67,7 +67,7 @@ func PrefixTxKey(txID ids.ID) (k []byte) {
 func PrefixTxValueKey(txID ids.ID) (k []byte) {
 	k = make([]byte, 2+len(txID))
 	k[0] = txValuePrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], txID[:])
 	return k
 }
@@ -77,7 +77,7 @@ func PrefixTxValueKey(txID ids.ID) (k []byte) {
 func ValueKey(key common.Hash) (k []byte) {
 	k = make([]byte, 2+common.HashLength)
 	k[0] = keyPrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], key.Bytes())
 	return k
 }
@@ -86,7 +86,7 @@ func ValueKey(key common.Hash) (k []byte) {
 func PrefixBalanceKey(address common.Address) (k []byte) {
 	k = make([]byte, 2+common.AddressLength)
 	k[0] = balancePrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], address[:])
 	return
 }

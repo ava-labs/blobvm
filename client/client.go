@@ -33,7 +33,7 @@ type Client interface {
 	// Balance returns the balance of an account
 	Balance(ctx context.Context, addr common.Address) (bal uint64, err error)
 	// Resolve returns the value associated with a path
-	Resolve(ctx context.Context, key string) (exists bool, value []byte, valueMeta *chain.ValueMeta, err error)
+	Resolve(ctx context.Context, key common.Hash) (exists bool, value []byte, valueMeta *chain.ValueMeta, err error)
 
 	// Requests the suggested price and cost from VM.
 	SuggestedRawFee(ctx context.Context) (uint64, uint64, error)
@@ -209,7 +209,7 @@ done:
 	return false, ctx.Err()
 }
 
-func (cli *client) Resolve(ctx context.Context, key string) (bool, []byte, *chain.ValueMeta, error) {
+func (cli *client) Resolve(ctx context.Context, key common.Hash) (bool, []byte, *chain.ValueMeta, error) {
 	resp := new(vm.ResolveReply)
 	if err := cli.req.SendRequest(
 		ctx,

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
@@ -17,8 +18,8 @@ import (
 )
 
 var resolveFileCmd = &cobra.Command{
-	Use:   "resolve-file [options] <key> <output path>",
-	Short: "Reads a file at space/key and saves it to disk",
+	Use:   "resolve-file [options] <root> <output path>",
+	Short: "Reads a file at a root and saves it to disk",
 	RunE:  resolveFileFunc,
 }
 
@@ -38,11 +39,12 @@ func resolveFileFunc(cmd *cobra.Command, args []string) error {
 	}
 	defer f.Close()
 
+	root := common.HexToHash(args[0])
 	cli := client.New(uri, requestTimeout)
-	if err := tree.Download(context.Background(), cli, args[0], f); err != nil {
+	if err := tree.Download(context.Background(), cli, root, f); err != nil {
 		return err
 	}
 
-	color.Green("resolved file %s and stored at %s", args[0], filePath)
+	color.Green("resolved file %v and stored at %s", root, filePath)
 	return nil
 }
