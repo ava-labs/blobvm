@@ -9,19 +9,21 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/blobvm/parser"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestValueKey(t *testing.T) {
 	t.Parallel()
 
+	k := ValueHash([]byte("hello"))
 	tt := []struct {
 		rspc     ids.ShortID
-		key      []byte
+		key      common.Hash
 		valueKey []byte
 	}{
 		{
-			key:      []byte("hello"),
-			valueKey: append([]byte{keyPrefix}, []byte("/hello")...),
+			key:      k,
+			valueKey: append([]byte{keyPrefix, parser.ByteDelimiter}, k.Bytes()...),
 		},
 	}
 	for i, tv := range tt {

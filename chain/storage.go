@@ -15,7 +15,6 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ethereum/go-ethereum/common"
 	smath "github.com/ethereum/go-ethereum/common/math"
-	"github.com/ethereum/go-ethereum/crypto"
 	log "github.com/inconshreveable/log15"
 
 	"github.com/ava-labs/blobvm/parser"
@@ -75,11 +74,11 @@ func PrefixTxValueKey(txID ids.ID) (k []byte) {
 
 // Assumes [key] does not contain delimiter
 // [keyPrefix] + [delimiter] + [key]
-func ValueKey(key []byte) (k []byte) {
-	k = make([]byte, 2+len(key))
+func ValueKey(key common.Hash) (k []byte) {
+	k = make([]byte, 2+common.HashLength)
 	k[0] = keyPrefix
 	k[1] = parser.ByteDelimiter
-	copy(k[2:], key)
+	copy(k[2:], key.Bytes())
 	return k
 }
 
@@ -94,7 +93,7 @@ func PrefixBalanceKey(address common.Address) (k []byte) {
 
 var ErrInvalidKeyFormat = errors.New("invalid key format")
 
-func GetValueMeta(db database.KeyValueReader, key []byte) (*ValueMeta, bool, error) {
+func GetValueMeta(db database.KeyValueReader, key common.Hash) (*ValueMeta, bool, error) {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	rvmeta, err := db.Get(k)
@@ -111,7 +110,7 @@ func GetValueMeta(db database.KeyValueReader, key []byte) (*ValueMeta, bool, err
 	return vmeta, true, nil
 }
 
-func GetValue(db database.KeyValueReader, key []byte) ([]byte, bool, error) {
+func GetValue(db database.KeyValueReader, key common.Hash) ([]byte, bool, error) {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	rvmeta, err := db.Get(k)
@@ -246,7 +245,7 @@ func GetBlock(db database.KeyValueReader, bid ids.ID) (*StatefulBlock, error) {
 }
 
 // DB
-func HasKey(db database.KeyValueReader, key []byte) (bool, error) {
+func HasKey(db database.KeyValueReader, key common.Hash) (bool, error) {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	return db.Has(k)
@@ -258,7 +257,7 @@ type ValueMeta struct {
 	Created uint64 `serialize:"true" json:"created"`
 }
 
-func PutKey(db database.KeyValueWriter, key []byte, vmeta *ValueMeta) error {
+func PutKey(db database.KeyValueWriter, key common.Hash, vmeta *ValueMeta) error {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	rvmeta, err := Marshal(vmeta)
@@ -339,12 +338,12 @@ func ModifyBalance(db database.KeyValueReaderWriter, address common.Address, add
 	return n, SetBalance(db, address, n)
 }
 
-func SelectRandomValueKey(db database.Database, index uint64) []byte {
+func SelectRandomValueKey(db database.Database, index uint64) common.Hash {
 	seed := new(big.Int).SetUint64(index).Bytes()
-	iterator := crypto.Keccak256(seed)
+	iterator := ValueHash(seed)
 
 	startKey := ValueKey(iterator)
-	baseKey := ValueKey(nil)
+	baseKey := ValueKey(common.Hash{})
 	cursor := db.NewIteratorWithStart(startKey)
 	defer cursor.Release()
 	for cursor.Next() {
@@ -356,10 +355,11 @@ func SelectRandomValueKey(db database.Database, index uint64) []byte {
 			break
 		}
 
-		return curKey[2:]
+		// [keyPrefix] + [delimiter] + [key]
+		return common.BytesToHash(curKey[2:])
 	}
 
 	// No value selected
 	log.Debug("skipping value selection: no valid key")
-	return nil
+	return common.Hash{}
 }

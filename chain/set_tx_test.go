@@ -85,7 +85,7 @@ func TestSetTx(t *testing.T) {
 		switch tp := tv.utx.(type) {
 		case *SetTx:
 			k := ValueHash(tp.Value)
-			vmeta, exists, err := GetValueMeta(db, []byte(k))
+			vmeta, exists, err := GetValueMeta(db, k)
 			if err != nil {
 				t.Fatalf("#%d: failed to get meta info %v", i, err)
 			}
@@ -98,7 +98,7 @@ func TestSetTx(t *testing.T) {
 				}
 			}
 
-			val, exists, err := GetValue(db, []byte(k))
+			val, exists, err := GetValue(db, k)
 			if err != nil {
 				t.Fatalf("#%d: failed to get key info %v", i, err)
 			}
