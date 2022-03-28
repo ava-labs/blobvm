@@ -110,6 +110,8 @@ func TestSetTx(t *testing.T) {
 					t.Fatalf("#%d: unexpected value %q, expected %q", i, val, tp.Value)
 				}
 			}
+		default:
+			t.Fatalf("unknown tx type %T", tv.utx)
 		}
 	}
 }

@@ -6,6 +6,7 @@ package mempool_test
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
+	"fmt"
 	"testing"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -69,13 +70,14 @@ func createTestMempool(
 		if err != nil {
 			b.Fatal(err)
 		}
+		space := append([]byte(fmt.Sprintf("0x%056x", i)), spc...)
 
 		tx := &chain.Transaction{
-			UnsignedTransaction: &chain.ClaimTx{
+			UnsignedTransaction: &chain.SetTx{
 				BaseTx: &chain.BaseTx{
 					BlockID: blks[i%blksN],
 				},
-				Space: string(spc),
+				Value: space,
 			},
 		}
 		sig, err := chain.Sign(tx.DigestHash(), priv)

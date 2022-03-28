@@ -34,8 +34,6 @@ const (
 	keyPrefix     = 0x3
 	balancePrefix = 0x4
 
-	shortIDLen = 20
-
 	linkedTxLRUSize = 512
 )
 
@@ -256,7 +254,7 @@ type ValueMeta struct {
 	Created uint64 `serialize:"true" json:"created"`
 }
 
-func PutKey(db database.KeyValueReaderWriter, key []byte, vmeta *ValueMeta) error {
+func PutKey(db database.KeyValueWriter, key []byte, vmeta *ValueMeta) error {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	rvmeta, err := Marshal(vmeta)

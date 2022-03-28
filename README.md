@@ -73,9 +73,9 @@ Spaces of length 66 (`0x + hex-encoded EVM-style address`) are reserved for
 address holders. Only the person who can produce a valid signature for a given
 address can claim these types of spaces.
 
-### Set/Delete
-Once you have a space, you can then use `SetTx` and `DeleteTx` actions to
-add/modify/delete keys in it. The more storage your space uses, the faster it
+### Set
+Once you have a space, you can then use `SetTx` to
+add keys in it. The more storage your space uses, the faster it
 will expire.
 
 #### Content-Addressable Keys

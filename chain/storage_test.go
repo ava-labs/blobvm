@@ -21,7 +21,7 @@ func TestValueKey(t *testing.T) {
 	}{
 		{
 			key:      []byte("hello"),
-			valueKey: append([]byte{keyPrefix}, []byte("/hello")...), //nolint:lll
+			valueKey: append([]byte{keyPrefix}, []byte("/hello")...),
 		},
 	}
 	for i, tv := range tt {

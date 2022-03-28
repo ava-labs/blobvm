@@ -6,13 +6,11 @@ package client
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/rpc"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/fatih/color"
 
 	"github.com/ava-labs/blobvm/chain"
@@ -204,6 +202,7 @@ done:
 			continue
 		}
 		if confirmed {
+			color.Green("confirmed transaction %v", txID)
 			return true, nil
 		}
 	}
@@ -227,7 +226,7 @@ func (cli *client) Resolve(ctx context.Context, key string) (bool, []byte, *chai
 		return false, nil, nil, nil
 	}
 
-	if key != strings.ToLower(common.Bytes2Hex(crypto.Keccak256(resp.Value))) {
+	if key != chain.ValueHash(resp.Value) {
 		return false, nil, nil, ErrIntegrityFailure
 	}
 	return true, resp.Value, resp.ValueMeta, nil
