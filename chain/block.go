@@ -12,6 +12,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/choices"
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	log "github.com/inconshreveable/log15"
 )
@@ -26,7 +27,7 @@ type StatefulBlock struct {
 	Hght   uint64         `serialize:"true" json:"height"`
 	Price  uint64         `serialize:"true" json:"price"`
 	Cost   uint64         `serialize:"true" json:"cost"`
-	Random string         `serialize:"true" json:"random"`
+	Random common.Hash    `serialize:"true" json:"random"`
 	Txs    []*Transaction `serialize:"true" json:"txs"`
 }
 
@@ -131,6 +132,18 @@ func (b *StatelessBlock) init() error {
 // implements "snowman.Block.choices.Decidable"
 func (b *StatelessBlock) ID() ids.ID { return b.id }
 
+func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
+	v := SelectRandomValueKey(db, hght)
+	val, exists, err := GetValue(db, v)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	if !exists {
+		return common.Hash{}, ErrKeyMissing
+	}
+	return ValueHash(append(val, pid[:]...)), nil
+}
+
 // verify checks the correctness of a block and then returns the
 // *versiondb.Database computed during execution.
 func (b *StatelessBlock) verify() (*StatelessBlock, *versiondb.Database, error) {
@@ -179,16 +192,11 @@ func (b *StatelessBlock) verify() (*StatelessBlock, *versiondb.Database, error) 
 	onAcceptDB := versiondb.New(parentState)
 
 	// Select random value and hash
-	v := SelectNextValueKey(onAcceptDB, b.Hght)
-	val, exists, err := GetValue(onAcceptDB, v)
+	rand, err := generateRandom(onAcceptDB, parent.ID(), b.Hght)
 	if err != nil {
 		return nil, nil, err
 	}
-	if !exists {
-		return nil, nil, ErrKeyMissing
-	}
-	pid := [32]byte(parent.ID())
-	if b.Random != ValueHash(append(val, pid[:]...)) {
+	if b.Random != rand {
 		return nil, nil, ErrInvalidRandom
 	}
 

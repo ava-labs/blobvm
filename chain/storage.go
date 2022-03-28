@@ -339,7 +339,7 @@ func ModifyBalance(db database.KeyValueReaderWriter, address common.Address, add
 	return n, SetBalance(db, address, n)
 }
 
-func SelectNextValueKey(db database.Database, index uint64) []byte {
+func SelectRandomValueKey(db database.Database, index uint64) []byte {
 	seed := new(big.Int).SetUint64(index).Bytes()
 	iterator := crypto.Keccak256(seed)
 
@@ -352,14 +352,14 @@ func SelectNextValueKey(db database.Database, index uint64) []byte {
 		if bytes.Compare(baseKey, curKey) < -1 { // startKey < curKey; continue search
 			continue
 		}
-		if !bytes.Contains(curKey, baseKey) { // curKey does not contain base key; end search
+		if !bytes.HasPrefix(curKey, baseKey) { // curKey does not have prefix base key; end search
 			break
 		}
 
 		return curKey[2:]
 	}
 
-	// No reward applied
+	// No value selected
 	log.Debug("skipping value selection: no valid key")
 	return nil
 }

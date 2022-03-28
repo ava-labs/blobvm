@@ -15,16 +15,16 @@ const (
 )
 
 var (
-	ErrInvalidContents = errors.New("spaces and keys must be ^0x[a-fA-F0-9]{64}$")
+	ErrInvalidContents = errors.New("keys must be ^0x[a-f0-9]{64}$")
 
 	reg *regexp.Regexp
 )
 
 func init() {
-	reg = regexp.MustCompile("^0x[a-fA-F0-9]{64}$")
+	reg = regexp.MustCompile("^0x[a-f0-9]{64}$")
 }
 
-// CheckContents returns an error if the identifier (space or key) format is invalid.
+// CheckContents returns an error if the identifier (key) format is invalid.
 func CheckContents(identifier string) error {
 	if !reg.MatchString(identifier) {
 		return ErrInvalidContents
