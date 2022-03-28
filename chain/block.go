@@ -13,6 +13,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/choices"
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	log "github.com/inconshreveable/log15"
 )
@@ -134,6 +135,11 @@ func (b *StatelessBlock) ID() ids.ID { return b.id }
 
 func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
 	v := SelectRandomValueKey(db, hght)
+	if v == (common.Hash{}) {
+		log.Debug("no key found for random", "parent", hexutil.Encode(pid[:]))
+		return common.Hash{}, nil
+	}
+
 	val, exists, err := GetValue(db, v)
 	if err != nil {
 		return common.Hash{}, err
@@ -143,7 +149,7 @@ func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash,
 	}
 
 	rand := ValueHash(append(val, pid[:]...))
-	log.Debug("generated random %v from parent=%x key=%v", rand, pid[:], v)
+	log.Debug("generated random", "random", rand, "parent", hexutil.Encode(pid[:]), "key", v)
 	return rand, nil
 }
 

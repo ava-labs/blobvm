@@ -15,7 +15,6 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ethereum/go-ethereum/common"
 	smath "github.com/ethereum/go-ethereum/common/math"
-	log "github.com/inconshreveable/log15"
 )
 
 // 0x0/ (block hashes)
@@ -360,6 +359,5 @@ func SelectRandomValueKey(db database.Database, index uint64) common.Hash {
 	}
 
 	// No value selected
-	log.Debug("skipping value selection: no valid key")
 	return common.Hash{}
 }
