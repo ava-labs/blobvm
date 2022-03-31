@@ -14,7 +14,9 @@ import (
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	smath "github.com/ethereum/go-ethereum/common/math"
+	log "github.com/inconshreveable/log15"
 )
 
 // 0x0/ (block hashes)
@@ -344,6 +346,7 @@ func SelectRandomValueKey(db database.Database, index uint64) common.Hash {
 	startKey := ValueKey(iterator)
 	baseKey := ValueKey(common.Hash{})
 	cursor := db.NewIteratorWithStart(startKey)
+	log.Debug("select random value", "start key", hexutil.Encode(startKey), "seed", index)
 	defer cursor.Release()
 	for cursor.Next() {
 		curKey := cursor.Key()
