@@ -12,6 +12,8 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/choices"
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	log "github.com/inconshreveable/log15"
 )
@@ -26,6 +28,7 @@ type StatefulBlock struct {
 	Hght   uint64         `serialize:"true" json:"height"`
 	Price  uint64         `serialize:"true" json:"price"`
 	Cost   uint64         `serialize:"true" json:"cost"`
+	Random common.Hash    `serialize:"true" json:"random"`
 	Txs    []*Transaction `serialize:"true" json:"txs"`
 }
 
@@ -39,8 +42,6 @@ type StatelessBlock struct {
 	st    choices.Status
 	t     time.Time
 	bytes []byte
-
-	Winners map[ids.ID]*Activity
 
 	vm         VM
 	children   []*StatelessBlock
@@ -92,7 +93,6 @@ func ParseStatefulBlock(
 		bytes:         source,
 		st:            status,
 		vm:            vm,
-		Winners:       map[ids.ID]*Activity{},
 	}
 	id, err := ids.ToID(crypto.Keccak256(b.bytes))
 	if err != nil {
@@ -109,7 +109,6 @@ func ParseStatefulBlock(
 }
 
 func (b *StatelessBlock) init() error {
-	b.Winners = map[ids.ID]*Activity{}
 	bytes, err := Marshal(b.StatefulBlock)
 	if err != nil {
 		return err
@@ -133,6 +132,26 @@ func (b *StatelessBlock) init() error {
 
 // implements "snowman.Block.choices.Decidable"
 func (b *StatelessBlock) ID() ids.ID { return b.id }
+
+func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
+	v := SelectRandomValueKey(db, hght)
+	if v == (common.Hash{}) {
+		log.Debug("no key found for random", "parent", hexutil.Encode(pid[:]), "height", hght)
+		return common.Hash{}, nil
+	}
+
+	val, exists, err := GetValue(db, v)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	if !exists {
+		return common.Hash{}, ErrKeyMissing
+	}
+
+	rand := ValueHash(append(val, pid[:]...))
+	log.Debug("generated random", "random", rand, "parent", hexutil.Encode(pid[:]), "key", v)
+	return rand, nil
+}
 
 // verify checks the correctness of a block and then returns the
 // *versiondb.Database computed during execution.
@@ -180,6 +199,15 @@ func (b *StatelessBlock) verify() (*StatelessBlock, *versiondb.Database, error) 
 		return nil, nil, err
 	}
 	onAcceptDB := versiondb.New(parentState)
+
+	// Select random value and hash
+	rand, err := generateRandom(onAcceptDB, parent.ID(), b.Hght)
+	if err != nil {
+		return nil, nil, err
+	}
+	if b.Random != rand {
+		return nil, nil, ErrInvalidRandom
+	}
 
 	// Process new transactions
 	log.Debug("build context", "height", b.Hght, "price", b.Price, "cost", b.Cost)

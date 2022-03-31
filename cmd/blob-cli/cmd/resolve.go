@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
@@ -24,13 +25,14 @@ func resolveFunc(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("expected exactly 1 argument, got %d", len(args))
 	}
+	k := common.HexToHash(args[0])
 	cli := client.New(uri, requestTimeout)
-	_, v, vmeta, err := cli.Resolve(context.Background(), args[0])
+	_, v, vmeta, err := cli.Resolve(context.Background(), k)
 	if err != nil {
 		return err
 	}
 
-	color.Yellow("%s=>%q", args[0], v)
+	color.Yellow("%v=>%q", k, v)
 	hr, err := json.Marshal(vmeta)
 	if err != nil {
 		return err

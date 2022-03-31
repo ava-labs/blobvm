@@ -4,17 +4,17 @@
 package chain
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/database"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ethereum/go-ethereum/common"
 	smath "github.com/ethereum/go-ethereum/common/math"
-
-	"github.com/ava-labs/blobvm/parser"
 )
 
 // 0x0/ (block hashes)
@@ -35,6 +35,8 @@ const (
 	balancePrefix = 0x4
 
 	linkedTxLRUSize = 512
+
+	ByteDelimiter byte = '/'
 )
 
 var (
@@ -46,7 +48,7 @@ var (
 func PrefixBlockKey(blockID ids.ID) (k []byte) {
 	k = make([]byte, 2+len(blockID))
 	k[0] = blockPrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], blockID[:])
 	return k
 }
@@ -55,7 +57,7 @@ func PrefixBlockKey(blockID ids.ID) (k []byte) {
 func PrefixTxKey(txID ids.ID) (k []byte) {
 	k = make([]byte, 2+len(txID))
 	k[0] = txPrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], txID[:])
 	return k
 }
@@ -64,18 +66,18 @@ func PrefixTxKey(txID ids.ID) (k []byte) {
 func PrefixTxValueKey(txID ids.ID) (k []byte) {
 	k = make([]byte, 2+len(txID))
 	k[0] = txValuePrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], txID[:])
 	return k
 }
 
 // Assumes [key] does not contain delimiter
 // [keyPrefix] + [delimiter] + [key]
-func ValueKey(key []byte) (k []byte) {
-	k = make([]byte, 2+len(key))
+func ValueKey(key common.Hash) (k []byte) {
+	k = make([]byte, 2+common.HashLength)
 	k[0] = keyPrefix
-	k[1] = parser.ByteDelimiter
-	copy(k[2:], key)
+	k[1] = ByteDelimiter
+	copy(k[2:], key.Bytes())
 	return k
 }
 
@@ -83,14 +85,14 @@ func ValueKey(key []byte) (k []byte) {
 func PrefixBalanceKey(address common.Address) (k []byte) {
 	k = make([]byte, 2+common.AddressLength)
 	k[0] = balancePrefix
-	k[1] = parser.ByteDelimiter
+	k[1] = ByteDelimiter
 	copy(k[2:], address[:])
 	return
 }
 
 var ErrInvalidKeyFormat = errors.New("invalid key format")
 
-func GetValueMeta(db database.KeyValueReader, key []byte) (*ValueMeta, bool, error) {
+func GetValueMeta(db database.KeyValueReader, key common.Hash) (*ValueMeta, bool, error) {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	rvmeta, err := db.Get(k)
@@ -107,7 +109,7 @@ func GetValueMeta(db database.KeyValueReader, key []byte) (*ValueMeta, bool, err
 	return vmeta, true, nil
 }
 
-func GetValue(db database.KeyValueReader, key []byte) ([]byte, bool, error) {
+func GetValue(db database.KeyValueReader, key common.Hash) ([]byte, bool, error) {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	rvmeta, err := db.Get(k)
@@ -242,7 +244,7 @@ func GetBlock(db database.KeyValueReader, bid ids.ID) (*StatefulBlock, error) {
 }
 
 // DB
-func HasKey(db database.KeyValueReader, key []byte) (bool, error) {
+func HasKey(db database.KeyValueReader, key common.Hash) (bool, error) {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	return db.Has(k)
@@ -254,7 +256,7 @@ type ValueMeta struct {
 	Created uint64 `serialize:"true" json:"created"`
 }
 
-func PutKey(db database.KeyValueWriter, key []byte, vmeta *ValueMeta) error {
+func PutKey(db database.KeyValueWriter, key common.Hash, vmeta *ValueMeta) error {
 	// [keyPrefix] + [delimiter] + [key]
 	k := ValueKey(key)
 	rvmeta, err := Marshal(vmeta)
@@ -333,4 +335,29 @@ func ModifyBalance(db database.KeyValueReaderWriter, address common.Address, add
 		return 0, fmt.Errorf("%w: bal=%d, addr=%v, add=%t, prev=%d, change=%d", ErrInvalidBalance, b, address, add, b, change)
 	}
 	return n, SetBalance(db, address, n)
+}
+
+func SelectRandomValueKey(db database.Database, index uint64) common.Hash {
+	seed := new(big.Int).SetUint64(index).Bytes()
+	iterator := ValueHash(seed)
+
+	startKey := ValueKey(iterator)
+	baseKey := []byte{keyPrefix, ByteDelimiter} // don't add empty hash with ValueKey
+	cursor := db.NewIteratorWithStart(startKey)
+	defer cursor.Release()
+	for cursor.Next() {
+		curKey := cursor.Key()
+		if bytes.Compare(baseKey, curKey) < -1 { // startKey < curKey; continue search
+			continue
+		}
+		if !bytes.HasPrefix(curKey, baseKey) { // curKey does not have prefix base key; end search
+			break
+		}
+
+		// [keyPrefix] + [delimiter] + [key]
+		return common.BytesToHash(curKey[2:])
+	}
+
+	// No value selected
+	return common.Hash{}
 }

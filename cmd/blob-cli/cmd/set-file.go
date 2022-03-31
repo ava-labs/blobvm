@@ -13,13 +13,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ava-labs/blobvm/client"
-	"github.com/ava-labs/blobvm/parser"
 	"github.com/ava-labs/blobvm/tree"
 )
 
 var setFileCmd = &cobra.Command{
-	Use:   "set-file [options] <space/key> <file path>",
-	Short: "Writes a file to the given space",
+	Use:   "set-file [options] <file path>",
+	Short: "Writes a file",
 	RunE:  setFileFunc,
 }
 
@@ -29,7 +28,7 @@ func setFileFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	space, f, err := getSetFileOp(args)
+	f, err := getSetFileOp(args)
 	if err != nil {
 		return err
 	}
@@ -42,34 +41,29 @@ func setFileFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	// TODO: protect against overflow
-	path, err := tree.Upload(context.Background(), cli, priv, space, f, int(g.MaxValueSize))
+	root, err := tree.Upload(context.Background(), cli, priv, f, int(g.MaxValueSize))
 	if err != nil {
 		return err
 	}
 
-	color.Green("uploaded file %s from %s", path, f.Name())
+	color.Green("uploaded file %v from %s", root, f.Name())
 	return nil
 }
 
-func getSetFileOp(args []string) (space string, f *os.File, err error) {
-	if len(args) != 2 {
-		return "", nil, fmt.Errorf("expected exactly 2 arguments, got %d", len(args))
+func getSetFileOp(args []string) (f *os.File, err error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("expected exactly 1 arguments, got %d", len(args))
 	}
 
-	spaceKey := args[0]
-	if err := parser.CheckContents(spaceKey); err != nil {
-		return "", nil, fmt.Errorf("%w: failed to parse space", err)
-	}
-
-	filePath := args[1]
+	filePath := args[0]
 	if _, err := os.Stat(filePath); err != nil {
-		return "", nil, fmt.Errorf("%w: file is not accessible", err)
+		return nil, fmt.Errorf("%w: file is not accessible", err)
 	}
 
 	f, err = os.Open(filePath)
 	if err != nil {
-		return "", nil, fmt.Errorf("%w: failed to open file", err)
+		return nil, fmt.Errorf("%w: failed to open file", err)
 	}
 
-	return spaceKey, f, nil
+	return f, nil
 }
