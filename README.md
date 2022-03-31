@@ -427,7 +427,7 @@ curl --location --request POST 'http://localhost:61858/ext/bc/BJfusM2TpHCEfmt5i7
     "jsonrpc": "2.0",
     "method": "blobvm.resolve",
     "params":{
-      "path": "coolperson/twitter"
+      "key": "0xd35882ae256d63123710cf8ab4343282d4a2c246281d3ff5e2b244744c8f7be4"
     },
     "id": 1
 }'
