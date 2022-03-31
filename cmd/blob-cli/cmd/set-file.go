@@ -18,7 +18,7 @@ import (
 
 var setFileCmd = &cobra.Command{
 	Use:   "set-file [options] <file path>",
-	Short: "Writes a file",
+	Short: "Writes a file to BlobVM (using multiple keys)",
 	RunE:  setFileFunc,
 }
 

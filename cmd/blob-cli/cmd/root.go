@@ -24,8 +24,8 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:        "blob-cli",
-		Short:      "SpacesVM CLI",
-		SuggestFor: []string{"blob-cli", "blobcli", "spacesctl"},
+		Short:      "BlobVM CLI",
+		SuggestFor: []string{"blob-cli", "blobcli"},
 	}
 )
 
@@ -58,7 +58,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(
 		&uri,
 		"endpoint",
-		"https://api.tryspaces.xyz",
+		"",
 		"RPC endpoint for VM",
 	)
 	rootCmd.PersistentFlags().BoolVar(

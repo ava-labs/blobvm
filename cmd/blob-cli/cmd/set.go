@@ -17,44 +17,8 @@ import (
 
 var setCmd = &cobra.Command{
 	Use:   "set [options] <value>",
-	Short: "Writes a value to the db",
-	Long: `
-Issues "SetTx" to write a key-value pair.
-
-The space is automatically parsed with the delimiter "/".
-When given a key "foo/hello", the "set" creates the transaction
-with "foo" as space and "hello" as key. The space/key cannot
-have more than one delimiter (e.g., "foo/hello/world" is invalid)
-in order to maintain the flat key space.
-
-It assumes the space is already claimed via "blob-cli claim".
-Otherwise, the set transaction will fail.
-
-# claims the space "hello.avax"
-# "hello.avax" is the space (or namespace)
-$ blob-cli claim hello.avax
-<<COMMENT
-success
-COMMENT
-
-# writes a key-value pair for the given namespace (space)
-# by issuing "SetTx" preceded by "IssueTx" on the space:
-# "hello.avax" is the space (or namespace)
-# "foo" is the key
-# "hello world" is the value
-$ blob-cli set hello.avax/foo "hello world"
-<<COMMENT
-success
-COMMENT
-
-# The existing key-value cannot be overwritten by a different owner.
-# The space must be claimed before it allows key-value writes.
-$ blob-cli set hello.avax/foo "hello world" --private-key-file=.different-key
-<<COMMENT
-error
-COMMENT
-`,
-	RunE: setFunc,
+	Short: "Writes a value to BlobVM",
+	RunE:  setFunc,
 }
 
 func setFunc(cmd *cobra.Command, args []string) error {

@@ -79,7 +79,6 @@ func BuildBlock(vm VM, preferred ids.ID) (snowman.Block, error) {
 		if err := tvdb.Commit(); err != nil {
 			return nil, err
 		}
-		// Wait to add spaces until after verification
 		b.Txs = append(b.Txs, next)
 		units += nextLoad
 	}

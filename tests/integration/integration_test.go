@@ -260,12 +260,12 @@ var _ = ginkgo.Describe("Tx Types", func() {
 		}
 	})
 
-	space := fmt.Sprintf("0x%064x", 1000000)
-	vh := chain.ValueHash(([]byte(space)))
+	v := []byte(fmt.Sprintf("0x%064x", 1000000))
+	vh := chain.ValueHash(v)
 	ginkgo.It("Gossip SetTx to a different node", func() {
 		setTx := &chain.SetTx{
 			BaseTx: &chain.BaseTx{},
-			Value:  []byte(space),
+			Value:  v,
 		}
 
 		ginkgo.By("issue SetTx", func() {
@@ -322,11 +322,11 @@ var _ = ginkgo.Describe("Tx Types", func() {
 			expectBlkAccept(instances[0])
 		})
 
-		space = fmt.Sprintf("0x%064x", 1000001)
+		v = []byte(fmt.Sprintf("0x%064x", 1000001))
 		ginkgo.By("fail Gossip SetTx to a stale node when missing previous blocks", func() {
 			setTx := &chain.SetTx{
 				BaseTx: &chain.BaseTx{},
-				Value:  []byte(space),
+				Value:  v,
 			}
 
 			ginkgo.By("issue SetTx", func() {
