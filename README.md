@@ -1,4 +1,4 @@
-# Spaces Virtual Machine (SpacesVM)
+# Blob Virtual Machine (BlobVM)
 
 _Content-Addressable Key-Value Store w/EIP-712 Compatibility and Fee-Based Metering_
 
@@ -37,7 +37,7 @@ the > 100s of MBs range (as long as you have the `BLB` to pay for it).
 ![wallet_signing](./imgs/wallet_signing.png)
 
 The canonical digest of a BlobVM transaction is [EIP-712] compliant, so any
-Web3 wallet that can sign typed data can interact with SpacesVM.
+Web3 wallet that can sign typed data can interact with BlobVM.
 
 **[EIP-712] compliance in this case, however, does not mean that BlobVM
 is an EVM or even an EVM derivative.** BlobVM is a new Avalanche-native VM written
@@ -52,7 +52,7 @@ persist some value blob into state. This value blob will be accessible at
 #### Content-Addressable Keys
 To support common blockchain use cases (like NFT storage), BlobVM
 supports the storage of arbitrary size files using a basic metadata file format.
-You can try this out using `blob-cli set-file <space> <filename>`.
+You can try this out using `blob-cli set-file <filename>`.
 
 ### Resolve
 When you want to view data stored in BlobVM, you call `Resolve` on the value
@@ -89,33 +89,26 @@ go install -v ./cmd/blob-cli;
 
 #### Usage
 ```
-SpacesVM CLI
+BlobVM CLI
 
 Usage:
   blob-cli [command]
 
 Available Commands:
   activity     View recent activity on the network
-  claim        Claims the given space
-  completion   generate the autocompletion script for the specified shell
+  completion   Generate the autocompletion script for the specified shell
   create       Creates a new key in the default location
-  delete       Deletes a key-value pair for the given space
-  delete-file  Deletes all hashes reachable from root file identifier
   genesis      Creates a new genesis in the default location
   help         Help about any command
-  info         Reads space info and all values at space
-  lifeline     Extends the life of a given space
-  move         Transfers a space to another address
-  network      View information about this instance of the SpacesVM
-  owned        Fetches all owned spaces for the address associated with the private key
-  resolve      Reads a value at space/key
-  resolve-file Reads a file at space/key and saves it to disk
-  set          Writes a key-value pair for the given space
-  set-file     Writes a file to the given space
+  network      View information about this instance of the BlobVM
+  resolve      Reads a value at key
+  resolve-file Reads a file at a root and saves it to disk
+  set          Writes a value to BlobVM
+  set-file     Writes a file to BlobVM (using multiple keys)
   transfer     Transfers units to another address
 
 Flags:
-      --endpoint string           RPC endpoint for VM (default "https://api.tryspaces.xyz")
+      --endpoint string           RPC endpoint for VM
   -h, --help                      help for blob-cli
       --private-key-file string   private key file path (default ".blob-cli-pk")
       --verbose                   Print verbose information about operations
@@ -125,9 +118,8 @@ Use "blob-cli [command] --help" for more information about a command.
 
 ##### Uploading Files
 ```
-blob-cli set-file spaceslover ~/Downloads/computer.gif -> patrick/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8
-blob-cli resolve-file spaceslover/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8 computer_copy.gif
-blob-cli delete-file spaceslover/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8
+blob-cli set-file ~/Downloads/computer.gif -> 6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8
+blob-cli resolve-file 6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c7a7b4b22013f676c8 computer_copy.gif
 ```
 
 ### [Golang SDK](https://github.com/ava-labs/blobvm/blob/master/client/client.go)
@@ -135,44 +127,38 @@ blob-cli delete-file spaceslover/6fe5a52f52b34fb1e07ba90bad47811c645176d0d49ef0c
 // Client defines blobvm client operations.
 type Client interface {
 	// Pings the VM.
-	Ping() (bool, error)
+	Ping(ctx context.Context) (bool, error)
 	// Network information about this instance of the VM
-	Network() (uint32, ids.ID, ids.ID, error)
+	Network(ctx context.Context) (uint32, ids.ID, ids.ID, error)
 
 	// Returns the VM genesis.
-	Genesis() (*chain.Genesis, error)
+	Genesis(ctx context.Context) (*chain.Genesis, error)
 	// Accepted fetches the ID of the last accepted block.
-	Accepted() (ids.ID, error)
+	Accepted(ctx context.Context) (ids.ID, error)
 
-	// Returns if a space is already claimed
-	Claimed(space string) (bool, error)
-	// Returns the corresponding space information.
-	Info(space string) (*chain.SpaceInfo, []*chain.KeyValueMeta, error)
 	// Balance returns the balance of an account
-	Balance(addr common.Address) (bal uint64, err error)
+	Balance(ctx context.Context, addr common.Address) (bal uint64, err error)
 	// Resolve returns the value associated with a path
-	Resolve(path string) (exists bool, value []byte, valueMeta *chain.ValueMeta, err error)
+	Resolve(ctx context.Context, key common.Hash) (exists bool, value []byte, valueMeta *chain.ValueMeta, err error)
 
 	// Requests the suggested price and cost from VM.
-	SuggestedRawFee() (uint64, uint64, error)
+	SuggestedRawFee(ctx context.Context) (uint64, uint64, error)
 	// Issues the transaction and returns the transaction ID.
-	IssueRawTx(d []byte) (ids.ID, error)
+	IssueRawTx(ctx context.Context, d []byte) (ids.ID, error)
 
 	// Requests the suggested price and cost from VM, returns the input as
 	// TypedData.
-	SuggestedFee(i *chain.Input) (*tdata.TypedData, uint64, error)
+	SuggestedFee(ctx context.Context, i *chain.Input) (*tdata.TypedData, uint64, error)
 	// Issues a human-readable transaction and returns the transaction ID.
-	IssueTx(td *tdata.TypedData, sig []byte) (ids.ID, error)
+	IssueTx(ctx context.Context, td *tdata.TypedData, sig []byte) (ids.ID, error)
 
 	// Checks the status of the transaction, and returns "true" if confirmed.
-	HasTx(id ids.ID) (bool, error)
+	HasTx(ctx context.Context, id ids.ID) (bool, error)
 	// Polls the transactions until its status is confirmed.
 	PollTx(ctx context.Context, txID ids.ID) (confirmed bool, err error)
 
 	// Recent actions on the network (sorted from recent to oldest)
-	RecentActivity() ([]*chain.Activity, error)
-	// All spaces owned by a given address
-	Owned(owner common.Address) ([]string, error)
+	RecentActivity(ctx context.Context) ([]*chain.Activity, error)
 }
 ```
 
@@ -234,7 +220,6 @@ _Provide your intent and get back a transaction to sign._
 ```
 {
   "type":<string>,
-  "space":<string>,
   "key":<string>,
   "value":<base64 encoded>,
   "to":<hex encoded>,
@@ -244,13 +229,8 @@ _Provide your intent and get back a transaction to sign._
 
 ###### Transaction Types
 ```
-claim    {type,space}
-lifeline {type,space,units}
-set      {type,space,key,value}
-delete   {type,space,key}
-move     {type,space,to}
+set      {type,key,value}
 transfer {type,to,units}
-
 ```
 
 #### blobvm.issueTx
@@ -266,15 +246,6 @@ transfer {type,to,units}
   "id": 1
 }
 >>> {"txId":<ID>}
-```
-
-##### Transaction Creation Worflow
-```
-1) blobvm.claimed {"space":"patrick"} => Yes/No
-2) blobvm.suggestedFee {"input":{"type":"claim", "space":"patrick"}} => {"typedData":<EIP-712 Typed Data>, "cost":<total fee>}
-3) sign EIP-712 Typed Data
-4) blobvm.issueTx {"typedData":<from blobvm.suggestedFee>, "signature":<sig from step 3>} => {"txId":<ID>}
-5) [loop] blobvm.hasTx {"txId":<ID>} => {"accepted":true"}
 ```
 
 #### blobvm.hasTx
@@ -303,47 +274,7 @@ transfer {type,to,units}
 >>> {"height":<uint64>, "blockId":<ID>}
 ```
 
-#### blobvm.claimed
-```
-<<< POST
-{
-  "jsonrpc": "2.0",
-  "method": "blobvm.claimed",
-  "params":{
-    "space":<string>
-  },
-  "id": 1
-}
->>> {"claimed":<bool>}
-```
-
-#### blobvm.info
-```
-<<< POST
-{
-  "jsonrpc": "2.0",
-  "method": "blobvm.info",
-  "params":{
-    "space":<string>
-  },
-  "id": 1
-}
->>> {"info":<chain.SpaceInfo>, "values":[<chain.KeyValueMeta>]}
-```
-
-##### chain.SpaceInfo
-```
-{
-  "owner":<hex encoded>,
-  "created":<unix>,
-  "updated":<unix>,
-  "expiry":<unix>,
-  "units":<uint64>,
-  "rawSpace":<ShortID>
-}
-```
-
-##### chain.KeyValueMeta
+##### chain.ValueMeta
 ```
 {
   "key":<string>,
@@ -363,7 +294,7 @@ transfer {type,to,units}
   "jsonrpc": "2.0",
   "method": "blobvm.resolve",
   "params":{
-    "path":<string | ex:jim/twitter>
+    "key":<string>
   },
   "id": 1
 }
@@ -403,7 +334,6 @@ transfer {type,to,units}
   "sender":<address>,
   "txId":<ID>,
   "type":<string>,
-  "space":<string>,
   "key":<string>,
   "to":<hex encoded>,
   "units":<uint64>
@@ -412,27 +342,8 @@ transfer {type,to,units}
 
 ###### Activity Types
 ```
-claim    {timestamp,sender,txId,type,space}
-lifeline {timestamp,sender,txId,type,space,units}
-set      {timestamp,sender,txId,type,space,key,value}
-delete   {timestamp,sender,txId,type,space,key}
-move     {timestamp,sender,txId,type,space,to}
+set      {timestamp,sender,txId,type,key,value}
 transfer {timestamp,sender,txId,type,to,units}
-reward   {timestamp,txId,type,to,units}
-```
-
-#### blobvm.owned
-```
-<<< POST
-{
-  "jsonrpc": "2.0",
-  "method": "blobvm.owned",
-  "params":{
-    "address":<hex encoded>
-  },
-  "id": 1
-}
->>> {"spaces":[<string>]}
 ```
 
 ### Advanced Public Endpoints (`/public`)
@@ -466,113 +377,6 @@ _Can use this to get the current fee rate._
 
 ## Running the VM
 To build the VM (and `blob-cli`), run `./scripts/build.sh`.
-
-### Joining the Spaces Demo
-If you'd like to validate the [Spaces Subnet Demo] on Fuji, please follow the following
-steps: 
-
-_You can find the genesis used for the Spaces Demo in `networks/42/*`._
-
-#### Download and Build SpacesVM
-```bash
-git clone https://github.com/ava-labs/blobvm.git;
-cd blobvm;
-./scripts/build.sh
-```
-
-Running the above commands will generate a binary and save it at
-`~/blobvm/build/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm`.
-
-#### Move Binary
-Once the SpacesVM binary is built, you'll need to move it to AvalancheGo's
-plugin directory (within the `--build-dir`) so it can be run by your node.
-When building from source, this defaults to `~/avalanchego/build/plugins`.
-This build directory is structured as:
-```
-build-dir
-|_avalanchego
-    |_plugins
-      |_evm
-```
-
-To put the SpacesVM binary in the right place, run the following command
-(assuming the `avalanchego` and `blobvm` repos are in the same folder):
-```bash
-mv ./blobvm/build/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm ./avalanchego/build/plugins;
-```
-
-#### Add Subnet to Whitelist
-Next, you'll need to provide the `whitelisted-subnets` argument by
-modifying your config file or providing an argument on
-startup (which tells your node to connect to the Spaces Subnet Demo). 
-[Ai42MkKqk8yjXFCpoHXw7rdTWSHiKEMqh5h8gbxwjgkCUfkrk](https://testnet.avascan.info/blockchains?subnet=Ai42MkKqk8yjXFCpoHXw7rdTWSHiKEMqh5h8gbxwjgkCUfkrk) 
-is the subnet id for Spaces Subnet.
-
-Example Config File:
-```json
-{
-  "network-id":"fuji",
-  "health-check-frequency":"2s",
-  "log-display-level":"INFO",
-  "log-level":"INFO",
-  "whitelisted-subnets":"Ai42MkKqk8yjXFCpoHXw7rdTWSHiKEMqh5h8gbxwjgkCUfkrk"
-}
-```
-
-Example Node Args:
-```bash
---whitelisted-subnets=Ai42MkKqk8yjXFCpoHXw7rdTWSHiKEMqh5h8gbxwjgkCUfkrk --network-id=fuji
-```
-
-#### Restart Node
-Once you've performed the following steps, you'll need to restart your
-AvalancheGo node for the changes to take effect.
-
-If you completed the steps successfully, you'll see the node print out:
-```bash
-INFO [01-25|16:47:04] chains/manager.go#246: creating chain:
-    ID: 2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD
-    VMID:sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm
-INFO [01-25|16:47:04] api/server/server.go#203: adding route /ext/bc/2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm/events
-INFO [01-25|16:47:04] api/server/server.go#203: adding route /ext/bc/2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm
-INFO [01-25|16:47:04] api/server/server.go#203: adding route /ext/bc/2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm/wallet
-INFO [01-25|16:47:04] <2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD Chain> snow/engine/snowman/transitive.go#67: initializing consensus engine
-INFO [01-25|16:47:04] <2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD Chain> snow/engine/snowman/bootstrap/bootstrapper.go#225: Starting bootstrap...
-INFO [01-25|16:47:04] <P Chain> snow/engine/snowman/bootstrap/bootstrapper.go#458: waiting for the remaining chains in this subnet to finish syncing
-INFO [01-25|16:47:04] api/server/server.go#203: adding route /ext/bc/2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD/public
-INFO [01-25|16:47:04] <2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD Chain> snow/engine/common/bootstrapper.go#235: Bootstrapping started syncing with 2 vertices in the accepted frontier
-INFO [01-25|16:47:05] <2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD Chain> snow/engine/snowman/bootstrap/bootstrapper.go#419: bootstrapping fetched 69 blocks. Executing state transitions...
-INFO [01-25|16:47:06] <2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD Chain> snow/engine/common/queue/jobs.go#181: executed 69 operations
-INFO [01-25|16:47:06] <2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD Chain> snow/engine/snowman/transitive.go#354: bootstrapping finished with 2DUxceCx71L5TLTeLpKUQxSBVm8vTKPmFs2usAyRnusUzs4Q4M as the last accepted block
-```
-
-If you didn't put the SpacesVM binary in the right place, you'll see something
-like:
-```bash
-INFO [01-26|05:54:19] chains/manager.go#246: creating chain:
-    ID: 2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD
-    VMID:sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm
-ERROR[01-26|05:54:19] chains/manager.go#270: error creating chain 2AM3vsuLoJdGBGqX2ibE8RGEq4Lg7g4bot6BT1Z7B9dH5corUD: error while looking up VM: there is no ID with alias sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm
-```
-
-#### Become a Fuji Validator
-Once your node is up and running with the SpacesVM, you'll need to [become a Fuji Validator].
-This is the exact same flow as Mainnet except you only need to stake
-`1 AVAX` instead of `2000 AVAX`.
-
-Recall, **only validators on the Primary Network (in this case Fuji) can become
-validators of subnets.**
-
-#### Submit a Validator Request
-Once you've completed the above steps and your node is fully bootstrapped, submit a
-[Spaces Demo Validator Request] to be considered as a validator (everyone will
-be approved).
-
-The Spaces Subnet Demo is a Permissioned Subnet and requires explicit approval from the
-creator to validate. In the near future, it will be possible to create permissionless
-subnets that anyone can join.
-
-If you have any questions, reach out to @\_patrickogrady on Twitter!
 
 ### Running a local network
 [`scripts/run.sh`](scripts/run.sh) automatically installs [avalanchego], sets up a local network,
@@ -638,7 +442,7 @@ kill 12811
 ```
 
 ### Deploying Your Own Network
-Anyone can deploy their own instance of the SpacesVM as a subnet on Avalanche.
+Anyone can deploy their own instance of the BlobVM as a subnet on Avalanche.
 All you need to do is compile it, create a genesis, and send a few txs to the
 P-Chain.
 
@@ -646,13 +450,9 @@ You can do this by following the [subnet tutorial]
 or by using the [subnet-cli].
 
 [EIP-712]: https://eips.ethereum.org/EIPS/eip-712
-[tryspaces.xyz]: https://tryspaces.xyz
 [avalanchego]: https://github.com/ava-labs/avalanchego
 [subnet tutorial]: https://docs.avax.network/build/tutorials/platform/subnets/create-a-subnet
 [subnet-cli]: https://github.com/ava-labs/subnet-cli
 [Coreth]: https://github.com/ava-labs/coreth
 [C-Chain]: https://docs.avax.network/learn/platform-overview/#contract-chain-c-chain
 [Subnet]: https://docs.avax.network/learn/platform-overview/#subnets
-[Spaces Subnet Demo]: https://tryspaces.xyz
-[Spaces Demo Validator Request]: https://forms.gle/aDFWBLEP9GvHwaFG6
-[become a Fuji Validator]: https://docs.avax.network/build/tutorials/nodes-and-staking/staking-avax-by-validating-or-delegating-with-the-avalanche-wallet
