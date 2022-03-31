@@ -136,7 +136,7 @@ func (b *StatelessBlock) ID() ids.ID { return b.id }
 func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
 	v := SelectRandomValueKey(db, hght)
 	if v == (common.Hash{}) {
-		log.Debug("no key found for random", "parent", hexutil.Encode(pid[:]))
+		log.Debug("no key found for random", "parent", hexutil.Encode(pid[:]), "height", hght)
 		return common.Hash{}, nil
 	}
 

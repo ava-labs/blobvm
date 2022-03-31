@@ -342,7 +342,7 @@ func SelectRandomValueKey(db database.Database, index uint64) common.Hash {
 	iterator := ValueHash(seed)
 
 	startKey := ValueKey(iterator)
-	baseKey := ValueKey(common.Hash{})
+	baseKey := []byte{keyPrefix, ByteDelimiter} // don't add empty hash with ValueKey
 	cursor := db.NewIteratorWithStart(startKey)
 	defer cursor.Release()
 	for cursor.Next() {
