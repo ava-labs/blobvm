@@ -1,7 +1,10 @@
 # Spaces Virtual Machine (SpacesVM)
 
-_Authenticated, Hierarchical Key-Value Store w/EIP-712 Compatibility,
-State Expiry, and Fee-Based Metering_
+_Content-Addressable Key-Value Store w/EIP-712 Compatibility and Fee-Based Metering_
+
+This code is similar to [SpacesVM](https://github.com/ava-labs/spacesvm) but
+does away with the hierarchical, authenticated namespace and user-specified
+keys.
 
 ## Avalanche Subnets and Custom VMs
 Avalanche is a network composed of multiple sub-networks (called [subnets][Subnet]) that each contain
@@ -10,124 +13,71 @@ any number of blockchains. Each blockchain is an instance of a
 much like an object in an object-oriented language is an instance of a class. That is,
 the VM defines the behavior of the blockchain where it is instantiated. For example,
 [Coreth (EVM)][Coreth] is a VM that is instantiated by the
-[C-Chain]. Likewise, one
-could deploy another instance of the EVM as their own blockchain (to take
+[C-Chain]. Likewise, one could deploy another instance of the EVM as their own blockchain (to take
 this to its logical conclusion).
 
 ## AvalancheGo Compatibility
 ```
-[v0.0.1] AvalancheGo@v1.7.7-v1.7.8
+[v0.0.1] AvalancheGo@v1.7.7-v1.7.9
 ```
 
 ## Introduction
-Just as [Coreth] powers the [C-Chain], SpacesVM can be used to power its own
+Just as [Coreth] powers the [C-Chain], BlobVM can be used to power its own
 blockchain in an Avalanche [Subnet]. Instead of providing a place to execute Solidity
-smart contracts, however, SpacesVM enables authenticated, hierarchical storage of arbitrary
+smart contracts, however, BlobVM enables content-addressable storage of arbitrary
 keys/values using any [EIP-712] compatible wallet.
 
-### Authenticated
-All modifications of storage require the signature of the owner
-of a "space".
-
-### Hierarchical
-Owners can modify any key in their "space" (ex: `owner/*`), however, no one
-else can.
-
-### Arbitrary Key/Value Storage
-As long as a key is `^[a-z0-9]{1,256}$`, it can be used as an identifier in
-SpacesVM. The max length of values is defined in genesis but typically ranges
+### Content-Addressable Key/Value Storage
+All keys in BlobVM are keccak256 hashes (each of a unique value stored in
+state). The max length of values is defined in genesis but typically ranges
 between 64-200KB. Any number of values can be linked together to store files in
-the > 100s of MBs range (as long as you have the `SPC` to pay for it).
+the > 100s of MBs range (as long as you have the `BLB` to pay for it).
 
 ### [EIP-712] Compatible
 ![wallet_signing](./imgs/wallet_signing.png)
 
-The canonical digest of a SpacesVM transaction is [EIP-712] compliant, so any
+The canonical digest of a BlobVM transaction is [EIP-712] compliant, so any
 Web3 wallet that can sign typed data can interact with SpacesVM.
 
-**[EIP-712] compliance in this case, however, does not mean that SpacesVM
-is an EVM or even an EVM derivative.** SpacesVM is a new Avalanche-native VM written
+**[EIP-712] compliance in this case, however, does not mean that BlobVM
+is an EVM or even an EVM derivative.** BlobVM is a new Avalanche-native VM written
 from scratch to optimize for storage-related operations.
 
-## Demo: [tryspaces.xyz]
-What better way to understand how the the SpacesVM works than to see it in action?
-Well anon, you are in luck!
-
-You can try out the SpacesVM at [tryspaces.xyz]. All you need
-is a [EIP-712] Compatible Web3 Wallet (like [MetaMask](https://metamask.io)) and some `SPC` (all 973k of
-you that interacted with the [C-Chain] more than 2 times got 10k `SPC` to get you
-started).
-
-This demo is running as an Avalanche [Subnet] on Fuji. It is **ALPHA LEVEL CODE** and may be
-restarted/have a few bugs in it. It exists for demonstration purposes **ONLY**
-but could be extended to run as a production-level [Subnet] on Avalanche Mainnet.
-
 ## How it Works
-### Claim
-Interacting with the SpacesVM starts with a `ClaimTx`. This reserves your own
-"space" and associates your address with it (so that only you can make changes
-to it and/or the keys in it).
-
-#### Reserved Spaces
-Spaces of length 66 (`0x + hex-encoded EVM-style address`) are reserved for
-address holders. Only the person who can produce a valid signature for a given
-address can claim these types of spaces.
-
 ### Set
-Once you have a space, you can then use `SetTx` to
-add keys in it. The more storage your space uses, the faster it
-will expire.
+As soon as you have some `BLB`, you can then use `SetTx` to
+persist some value blob into state. This value blob will be accessible at
+`keccak256(value)`. This value will live in state forever.
 
 #### Content-Addressable Keys
-To support common blockchain use cases (like NFT storage), the SpacesVM
-supports the storage of arbitrary size files using content-addressable keys.
+To support common blockchain use cases (like NFT storage), BlobVM
+supports the storage of arbitrary size files using a basic metadata file format.
 You can try this out using `blob-cli set-file <space> <filename>`.
 
-### Lifeline
-When your space uses a lot of storage and/or you've had it for a while, you may
-need to extend its life using a `LifelineTx`. If you don't, your space will
-eventually become inaccessible and all data stored within it will be deleted by
-the SpacesVM.
-
-#### Community Space Support
-It is not required that you own a space to submit a `LifelineTx` that extends
-its life. This enables the community to support useful spaces with their `SPC`.
-
 ### Resolve
-When you want to view data stored in SpacesVM, you call `Resolve` on the value
-path: `<space>/<key>`. If you stored a file at a particular path, use this
-command to retrieve it: `blob-cli resolve-file <path> <destination
-filepath>`.
+When you want to view data stored in BlobVM, you call `Resolve` on the value
+path: `<key>`. If you stored a file, use this command to retrieve it:
+`blob-cli resolve-file <root> <destination filepath>`.
 
 ### Transfer
-If you want to share some of your `SPC` with your friends, you can use
+If you want to share some of your `BLB` with your friends, you can use
 a `TransferTx` to send to any EVM-style address.
 
-### Move
-If you want to share a space with a friend, you can use a `MoveTx` to transfer
-it to any EVM-style address.
-
-### Space Rewards
-50% of the fees spent on each transaction are sent to a random space owner (as
-long as the randomly selected recipient is not the creator of the transaction).
-
-One could modify the SpacesVM to instead send rewards to a beneficiary chosen by
-whoever produces a block.
-
 ### Fees
-All interactions with the SpacesVM require the payment of fees (denominated in
-`SPC`). The VM Genesis includes support for allocating one-off `SPC` to
-different EVM-style addresses and to allocating `SPC` to an airdrop list.
+All interactions with the BlobVM require the payment of fees (denominated in
+`BLB`). The VM Genesis includes support for allocating one-off `BLB` to
+different EVM-style addresses and to allocating `BLB` to an airdrop list.
 
-Nearly all fee-related params can be tuned by the SpacesVM deployer.
+Nearly all fee-related params can be tuned by the BlobVM deployer.
+
+### Random Value Inclusion
+To deter node operators from deleting data stored in state, each block header
+includes the hash of a randomly selected value concatenated with the parent blockID.
+If values are pruned, node operators won't be able to produce/verify blocks.
 
 ## Usage
 _If you are interested in running the VM, not using it. Jump to [Running the
 VM](#running-the-vm)._
-
-### [tryspaces.xyz]
-The easiest way to try out SpacesVM is to visit the demo website
-[tryspaces.xyz].
 
 ### blob-cli
 #### Install
