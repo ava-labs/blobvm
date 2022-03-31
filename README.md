@@ -34,8 +34,6 @@ between 64-200KB. Any number of values can be linked together to store files in
 the > 100s of MBs range (as long as you have the `BLB` to pay for it).
 
 ### [EIP-712] Compatible
-![wallet_signing](./imgs/wallet_signing.png)
-
 The canonical digest of a BlobVM transaction is [EIP-712] compliant, so any
 Web3 wallet that can sign typed data can interact with BlobVM.
 
