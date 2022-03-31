@@ -173,12 +173,12 @@ var _ = ginkgo.Describe("[SetTx]", func() {
 			gomega.Ω(err).Should(gomega.BeNil())
 		})
 
-		ginkgo.By("check space to check if SetTx has been accepted from all nodes", func() {
+		ginkgo.By("check if SetTx has been accepted from all nodes", func() {
 			// enough time to be propagated to all nodes
 			time.Sleep(5 * time.Second)
 
 			for _, inst := range instances {
-				color.Blue("checking space on %q", inst.uri)
+				color.Blue("checking %q", inst.uri)
 				claimed, _, _, err := inst.cli.Resolve(context.Background(), vh)
 				gomega.Ω(err).To(gomega.BeNil())
 				gomega.Ω(claimed).Should(gomega.BeTrue())
