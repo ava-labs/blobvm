@@ -135,6 +135,15 @@ func (b *StatelessBlock) init() error {
 func (b *StatelessBlock) ID() ids.ID { return b.id }
 
 func generateAccessProof(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
+	// This seed selection is somewhat gameable (previous block producer could
+	// grind on parent block hashes to bias value selection) and could be
+	// improved with an on-chain VRF.
+	//
+	// This approach was preferred over a simple index seed
+	//
+	// Is there a way to not know when your randomness will be included/grouped
+	// with?
+	// -> at most, could be last in block range and determine
 	seed := pid[:]
 	seed = append(seed, new(big.Int).SetUint64(hght).Bytes()...)
 
