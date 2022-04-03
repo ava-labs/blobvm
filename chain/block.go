@@ -134,21 +134,13 @@ func (b *StatelessBlock) init() error {
 func (b *StatelessBlock) ID() ids.ID { return b.id }
 
 func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
-	v := SelectRandomValueKey(db, hght)
-	if v == (common.Hash{}) {
+	v := SelectRandomValue(db, hght)
+	if len(v) == 0 {
 		log.Debug("no key found for random", "parent", hexutil.Encode(pid[:]), "height", hght)
 		return common.Hash{}, nil
 	}
 
-	val, exists, err := GetValue(db, v)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	if !exists {
-		return common.Hash{}, ErrKeyMissing
-	}
-
-	rand := ValueHash(append(val, pid[:]...))
+	rand := ValueHash(append(v, pid[:]...))
 	log.Debug("generated random", "random", rand, "parent", hexutil.Encode(pid[:]), "key", v)
 	return rand, nil
 }
