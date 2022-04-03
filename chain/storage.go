@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math/big"
 
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/database"
@@ -337,10 +336,8 @@ func ModifyBalance(db database.KeyValueReaderWriter, address common.Address, add
 	return n, SetBalance(db, address, n)
 }
 
-func SelectRandomValue(db database.Database, index uint64) []byte {
-	seed := new(big.Int).SetUint64(index).Bytes()
+func SelectRandomValue(db database.Database, seed []byte) []byte {
 	iterator := ValueHash(seed)
-
 	startKey := ValueKey(iterator)
 	baseKey := []byte{keyPrefix, ByteDelimiter} // don't add empty hash with ValueKey
 	cursor := db.NewIteratorWithStart(startKey)
