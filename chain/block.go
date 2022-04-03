@@ -196,7 +196,7 @@ func (b *StatelessBlock) verify() (*StatelessBlock, *versiondb.Database, error) 
 	}
 	onAcceptDB := versiondb.New(parentState)
 
-	// Select random value and hash
+	// Generate access proof from random value
 	accessProof, err := generateAccessProof(onAcceptDB, parent.ID(), b.Hght)
 	if err != nil {
 		return nil, nil, err

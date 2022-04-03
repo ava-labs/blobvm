@@ -40,7 +40,7 @@ func BuildBlock(vm VM, preferred ids.ID) (snowman.Block, error) {
 	}
 	vdb := versiondb.New(parentDB)
 
-	// Select random value and hash
+	// Generate access proof from random value
 	b.AccessProof, err = generateAccessProof(vdb, parent.ID(), b.Hght)
 	if err != nil {
 		return nil, err
