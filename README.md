@@ -459,5 +459,10 @@ or by using the [subnet-cli].
 ## Future Work
 ### Moderation
 `BlobVM` does not include any built-in moderation mechanism to block/remove illicit
-content. As a first pass, someone could implement an M-of-N governance contract
+content. In the future, someone could implement an M-of-N governance contract
 that can remove any value if it violates some code of conduct.
+
+### Improved Access Proof
+The current `AccessProof` mechanism is naive and gameable (seeded by the parent
+block hash and index). In the future, someone could implement an on-chain VRF
+that could be used as a more robust seed.
