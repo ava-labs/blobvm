@@ -4,8 +4,8 @@
 package chain
 
 import (
+	"encoding/binary"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/ava-labs/avalanchego/database"
@@ -138,8 +138,9 @@ func generateAccessProof(db database.Database, pid ids.ID, hght uint64) common.H
 	// This seed selection is gameable because the previous block producer could
 	// grind the block hash to bias value selection (by including different
 	// transactions). This could be improved with some form of a VRF.
-	seed := pid[:]
-	seed = append(seed, new(big.Int).SetUint64(hght).Bytes()...)
+	seed := make([]byte, 40) // hash [32] + uint64 [8]
+	copy(seed, pid[:])       // copy hash to make sure not overwritten
+	binary.LittleEndian.PutUint64(seed[32:], hght)
 
 	v := SelectRandomValue(db, seed)
 	if len(v) == 0 {
