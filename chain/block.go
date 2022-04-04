@@ -134,7 +134,7 @@ func (b *StatelessBlock) init() error {
 // implements "snowman.Block.choices.Decidable"
 func (b *StatelessBlock) ID() ids.ID { return b.id }
 
-func generateAccessProof(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
+func generateAccessProof(db database.Database, pid ids.ID, hght uint64) common.Hash {
 	// This seed selection is gameable because the previous block producer could
 	// grind the block hash to bias value selection (by including different
 	// transactions). This could be improved with some form of a VRF.
@@ -144,12 +144,12 @@ func generateAccessProof(db database.Database, pid ids.ID, hght uint64) (common.
 	v := SelectRandomValue(db, seed)
 	if len(v) == 0 {
 		log.Debug("no key found for access proof", "parent", hexutil.Encode(pid[:]), "height", hght)
-		return common.Hash{}, nil
+		return common.Hash{}
 	}
 
 	rand := ValueHash(append(v, pid[:]...))
 	log.Debug("generated access proof", "random", rand, "parent", hexutil.Encode(pid[:]), "key", v)
-	return rand, nil
+	return rand
 }
 
 // verify checks the correctness of a block and then returns the
@@ -200,10 +200,7 @@ func (b *StatelessBlock) verify() (*StatelessBlock, *versiondb.Database, error) 
 	onAcceptDB := versiondb.New(parentState)
 
 	// Generate access proof from random value
-	accessProof, err := generateAccessProof(onAcceptDB, parent.ID(), b.Hght)
-	if err != nil {
-		return nil, nil, err
-	}
+	accessProof := generateAccessProof(onAcceptDB, parent.ID(), b.Hght)
 	if b.AccessProof != accessProof {
 		return nil, nil, ErrInvalidAccessProof
 	}

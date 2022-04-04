@@ -41,10 +41,7 @@ func BuildBlock(vm VM, preferred ids.ID) (snowman.Block, error) {
 	vdb := versiondb.New(parentDB)
 
 	// Generate access proof from random value
-	b.AccessProof, err = generateAccessProof(vdb, parent.ID(), b.Hght)
-	if err != nil {
-		return nil, err
-	}
+	b.AccessProof = generateAccessProof(vdb, parent.ID(), b.Hght)
 
 	b.Txs = []*Transaction{}
 	units := uint64(0)
