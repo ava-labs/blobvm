@@ -4,6 +4,7 @@
 package chain
 
 import (
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -23,13 +24,13 @@ const futureBound = 10 * time.Second
 var _ snowman.Block = &StatelessBlock{}
 
 type StatefulBlock struct {
-	Prnt   ids.ID         `serialize:"true" json:"parent"`
-	Tmstmp int64          `serialize:"true" json:"timestamp"`
-	Hght   uint64         `serialize:"true" json:"height"`
-	Price  uint64         `serialize:"true" json:"price"`
-	Cost   uint64         `serialize:"true" json:"cost"`
-	Random common.Hash    `serialize:"true" json:"random"`
-	Txs    []*Transaction `serialize:"true" json:"txs"`
+	Prnt        ids.ID         `serialize:"true" json:"parent"`
+	Tmstmp      int64          `serialize:"true" json:"timestamp"`
+	Hght        uint64         `serialize:"true" json:"height"`
+	Price       uint64         `serialize:"true" json:"price"`
+	Cost        uint64         `serialize:"true" json:"cost"`
+	AccessProof common.Hash    `serialize:"true" json:"accessProof"`
+	Txs         []*Transaction `serialize:"true" json:"txs"`
 }
 
 // Stateless is defined separately from "Block"
@@ -133,24 +134,23 @@ func (b *StatelessBlock) init() error {
 // implements "snowman.Block.choices.Decidable"
 func (b *StatelessBlock) ID() ids.ID { return b.id }
 
-func generateRandom(db database.Database, pid ids.ID, hght uint64) (common.Hash, error) {
-	v := SelectRandomValueKey(db, hght)
-	if v == (common.Hash{}) {
-		log.Debug("no key found for random", "parent", hexutil.Encode(pid[:]), "height", hght)
-		return common.Hash{}, nil
+func generateAccessProof(db database.Database, pid ids.ID, hght uint64) common.Hash {
+	// This seed selection is gameable because the previous block producer could
+	// grind the block hash to bias value selection (by including different
+	// transactions). This could be improved with some form of a VRF.
+	seed := make([]byte, 40) // hash [32] + uint64 [8]
+	copy(seed, pid[:])       // copy hash to make sure not overwritten
+	binary.LittleEndian.PutUint64(seed[32:], hght)
+
+	v := SelectRandomValue(db, seed)
+	if len(v) == 0 {
+		log.Debug("no key found for access proof", "parent", hexutil.Encode(pid[:]), "height", hght)
+		return common.Hash{}
 	}
 
-	val, exists, err := GetValue(db, v)
-	if err != nil {
-		return common.Hash{}, err
-	}
-	if !exists {
-		return common.Hash{}, ErrKeyMissing
-	}
-
-	rand := ValueHash(append(val, pid[:]...))
-	log.Debug("generated random", "random", rand, "parent", hexutil.Encode(pid[:]), "key", v)
-	return rand, nil
+	rand := ValueHash(append(v, pid[:]...))
+	log.Debug("generated access proof", "random", rand, "parent", hexutil.Encode(pid[:]), "key", v)
+	return rand
 }
 
 // verify checks the correctness of a block and then returns the
@@ -200,13 +200,10 @@ func (b *StatelessBlock) verify() (*StatelessBlock, *versiondb.Database, error) 
 	}
 	onAcceptDB := versiondb.New(parentState)
 
-	// Select random value and hash
-	rand, err := generateRandom(onAcceptDB, parent.ID(), b.Hght)
-	if err != nil {
-		return nil, nil, err
-	}
-	if b.Random != rand {
-		return nil, nil, ErrInvalidRandom
+	// Generate access proof from random value
+	accessProof := generateAccessProof(onAcceptDB, parent.ID(), b.Hght)
+	if b.AccessProof != accessProof {
+		return nil, nil, ErrInvalidAccessProof
 	}
 
 	// Process new transactions

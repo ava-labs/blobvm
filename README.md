@@ -19,6 +19,7 @@ this to its logical conclusion).
 ## AvalancheGo Compatibility
 ```
 [v0.0.1] AvalancheGo@v1.7.7-v1.7.9
+[v0.0.2] AvalancheGo@v1.7.7-v1.7.9
 ```
 
 ## Introduction
@@ -70,8 +71,8 @@ Nearly all fee-related params can be tuned by the BlobVM deployer.
 
 ### Random Value Inclusion
 To deter node operators from deleting data stored in state, each block header
-includes the hash of a randomly selected value concatenated with the parent blockID.
-If values are pruned, node operators won't be able to produce/verify blocks.
+includes the hash of a randomly selected state value concatenated with the parent blockID.
+If values are pruned, node operators can't produce/verify blocks.
 
 ## Usage
 _If you are interested in running the VM, not using it. Jump to [Running the
@@ -454,3 +455,14 @@ or by using the [subnet-cli].
 [Coreth]: https://github.com/ava-labs/coreth
 [C-Chain]: https://docs.avax.network/learn/platform-overview/#contract-chain-c-chain
 [Subnet]: https://docs.avax.network/learn/platform-overview/#subnets
+
+## Future Work
+### Moderation
+`BlobVM` does not include any built-in moderation mechanism to block/remove illicit
+content. In the future, someone could implement an M-of-N governance contract
+that can remove any value if it violates some code of conduct.
+
+### Improved Access Proof
+The current `AccessProof` mechanism is naive and gameable (seeded by the parent
+block hash and index). In the future, someone could implement an on-chain VRF
+that could be used as a more robust seed.

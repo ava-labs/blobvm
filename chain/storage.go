@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"math/big"
 
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/database"
@@ -337,10 +336,8 @@ func ModifyBalance(db database.KeyValueReaderWriter, address common.Address, add
 	return n, SetBalance(db, address, n)
 }
 
-func SelectRandomValueKey(db database.Database, index uint64) common.Hash {
-	seed := new(big.Int).SetUint64(index).Bytes()
+func SelectRandomValue(db database.Database, seed []byte) []byte {
 	iterator := ValueHash(seed)
-
 	startKey := ValueKey(iterator)
 	baseKey := []byte{keyPrefix, ByteDelimiter} // don't add empty hash with ValueKey
 	cursor := db.NewIteratorWithStart(startKey)
@@ -353,11 +350,9 @@ func SelectRandomValueKey(db database.Database, index uint64) common.Hash {
 		if !bytes.HasPrefix(curKey, baseKey) { // curKey does not have prefix base key; end search
 			break
 		}
-
-		// [keyPrefix] + [delimiter] + [key]
-		return common.BytesToHash(curKey[2:])
+		return cursor.Value()
 	}
 
 	// No value selected
-	return common.Hash{}
+	return nil
 }
