@@ -17,14 +17,8 @@ import (
 )
 
 const (
-	LotteryRewardDivisor = 100
-	MinBlockCost         = 0
-
-	DefaultFreeClaimStorage  = 1 * units.MiB
-	DefaultValueUnitSize     = 1 * units.KiB
-	DefaultFreeClaimUnits    = DefaultFreeClaimStorage / DefaultValueUnitSize
-	DefaultFreeClaimDuration = 60 * 60 * 24 * 30 // 30 Days
-
+	MinBlockCost          = 0
+	DefaultValueUnitSize  = 1 * units.KiB
 	DefaultLookbackWindow = 60
 )
 
