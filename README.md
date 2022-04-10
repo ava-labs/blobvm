@@ -3,8 +3,8 @@
 _Content-Addressable Key-Value Store w/EIP-712 Compatibility and Fee-Based Metering_
 
 This code is similar to [SpacesVM](https://github.com/ava-labs/spacesvm) but
-does away with the hierarchical, authenticated namespace and user-specified
-keys.
+does away with the hierarchical, authenticated namespace, user-specified
+keys, and key expiry.
 
 ## Avalanche Subnets and Custom VMs
 Avalanche is a network composed of multiple sub-networks (called [subnets][Subnet]) that each contain
