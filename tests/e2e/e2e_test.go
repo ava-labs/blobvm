@@ -151,7 +151,7 @@ var _ = ginkgo.BeforeSuite(func() {
 	gomega.Expect(err).Should(gomega.BeNil())
 
 	ginkgo.By("calling start API via network runner", func() {
-		outf("{{green}}sending 'start' with binary path:{{/}} %q\n", execPath)
+		outf("{{green}}sending 'start' with binary path:{{/}} %q (%q)\n", execPath, vmID)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		resp, err := cli.Start(
 			ctx,
