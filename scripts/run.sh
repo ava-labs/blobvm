@@ -69,7 +69,7 @@ AVALANCHEGO_PLUGIN_DIR=/tmp/avalanchego-v${VERSION}/plugins
 ############################
 echo "building blobvm"
 go build \
--o /tmp/avalanchego-v${VERSION}/plugins/sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm \
+-o /tmp/avalanchego-v${VERSION}/plugins/kM6h4LYe3AcEU1MB2UNg6ubzAiDAALZzpVrbX8zn3hXF6Avd8 \
 ./cmd/blobvm
 find /tmp/avalanchego-v${VERSION}
 
@@ -171,7 +171,7 @@ if [[ ${MODE} == "test" ]]; then
   echo "network-runner RPC server was running on PID ${PID} as test mode; terminating the process..."
   pkill -P ${PID} || true
   kill -2 ${PID}
-  pkill -9 -f sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm || true # in case pkill didn't work
+  pkill -9 -f kM6h4LYe3AcEU1MB2UNg6ubzAiDAALZzpVrbX8zn3hXF6Avd8 || true # in case pkill didn't work
 else
   echo "network-runner RPC server is running on PID ${PID}..."
   echo ""
@@ -179,6 +179,6 @@ else
   echo ""
   echo "pkill -P ${PID}"
   echo "kill -2 ${PID}"
-  echo "pkill -9 -f sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm"
+  echo "pkill -9 -f kM6h4LYe3AcEU1MB2UNg6ubzAiDAALZzpVrbX8zn3hXF6Avd8"
   echo ""
 fi
