@@ -21,6 +21,7 @@ this to its logical conclusion).
 [v0.0.1] AvalancheGo@v1.7.7-v1.7.9
 [v0.0.2] AvalancheGo@v1.7.7-v1.7.9
 [v0.0.3] AvalancheGo@v1.7.10
+[v0.0.4] AvalancheGo@v1.7.11
 ```
 
 ## Introduction
