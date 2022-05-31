@@ -278,7 +278,7 @@ var _ = ginkgo.AfterSuite(func() {
 		gomega.Expect(err).Should(gomega.BeNil())
 
 	case modeRun:
-		outf("{{red}}skipping shutting down cluster{{/}}\n")
+		outf("{{yellow}}skipping shutting down cluster{{/}}\n")
 	}
 
 	outf("{{red}}shutting down client{{/}}\n")
@@ -309,6 +309,12 @@ var _ = ginkgo.Describe("[Network]", func() {
 })
 
 var _ = ginkgo.Describe("[SetTx]", func() {
+	switch mode {
+	case modeRun:
+		outf("{{yellow}}skipping SetTx tests{{/}}\n")
+		return
+	}
+
 	ginkgo.It("get currently accepted block ID", func() {
 		for _, inst := range instances {
 			cli := inst.cli
