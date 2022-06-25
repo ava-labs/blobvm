@@ -1,5 +1,14 @@
 # Blob Virtual Machine (BlobVM)
 
+### TODO
+* Use `flamedb`
+* Remove lottery key inclusion
+* Remove shared state with blocks (just put into `flamedb`)
+* Add coreth lookback logic for fees
+* Remove recent block iterator and just require tx validity for 256 blocks
+* Add state sync
+* Prune blocks below the snapshot boundary
+
 _Content-Addressable Key-Value Store w/EIP-712 Compatibility and Fee-Based Metering_
 
 This code is similar to [SpacesVM](https://github.com/ava-labs/spacesvm) but
