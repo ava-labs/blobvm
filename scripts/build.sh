@@ -10,7 +10,7 @@ if ! [[ "$0" =~ scripts/build.sh ]]; then
 fi
 
 # Set default binary directory location
-name="sqja3uK17MJxfC7AN8nGadBw9JK5BcrsNwNynsqP5Gih8M5Bm"
+name="kM6h4LYe3AcEU1MB2UNg6ubzAiDAALZzpVrbX8zn3hXF6Avd8"
 
 # Build blobvm, which is run as a subprocess
 mkdir -p ./build
