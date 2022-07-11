@@ -6,4 +6,8 @@ package version
 
 import "github.com/ava-labs/avalanchego/version"
 
-var Version = version.NewDefaultVersion(0, 0, 1)
+var Version = &version.Semantic{
+	Major: 0,
+	Minor: 0,
+	Patch: 6,
+}
