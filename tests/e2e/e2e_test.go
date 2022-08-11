@@ -40,7 +40,6 @@ var (
 
 	execPath  string
 	pluginDir string
-	logLevel  string
 
 	vmGenesisPath string
 	outputPath    string
@@ -62,6 +61,7 @@ func init() {
 		"info",
 		"gRPC server endpoint",
 	)
+
 	flag.StringVar(
 		&gRPCEp,
 		"network-runner-grpc-endpoint",
@@ -81,24 +81,21 @@ func init() {
 		"",
 		"avalanchego executable path",
 	)
-	flag.StringVar(
-		&logLevel,
-		"avalanchego-log-level",
-		"INFO",
-		"avalanchego log level",
-	)
+
 	flag.StringVar(
 		&pluginDir,
 		"avalanchego-plugin-dir",
 		"",
 		"avalanchego plugin directory",
 	)
+
 	flag.StringVar(
 		&vmGenesisPath,
 		"vm-genesis-path",
 		"",
 		"VM genesis file path",
 	)
+
 	flag.StringVar(
 		&outputPath,
 		"output-path",
@@ -156,7 +153,6 @@ var _ = ginkgo.BeforeSuite(func() {
 		resp, err := cli.Start(
 			ctx,
 			execPath,
-			runner_sdk.WithLogLevel(logLevel),
 			runner_sdk.WithPluginDir(pluginDir),
 			runner_sdk.WithCustomVMs(map[string]string{
 				vmName: vmGenesisPath,
@@ -200,10 +196,12 @@ done:
 		// all logs are stored under root data dir
 		logsDir = resp.GetClusterInfo().GetRootDataDir()
 
-		if v, ok := resp.ClusterInfo.CustomVms[vmID.String()]; ok {
-			blockchainID = v.BlockchainId
-			outf("{{blue}}blobvm is ready:{{/}} %+v\n", v)
-			break done
+		for _, v := range resp.ClusterInfo.CustomVms {
+			if v.VmId == vmID.String() {
+				blockchainID = v.BlockchainId
+				outf("{{blue}}spacesvm is ready:{{/}} %+v\n", v)
+				break done
+			}
 		}
 	}
 	gomega.Expect(ctx.Err()).Should(gomega.BeNil())
