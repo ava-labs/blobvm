@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/utils/timer"
+	"github.com/ava-labs/blobvm/utils/timer"
 	log "github.com/inconshreveable/log15"
 )
 
