@@ -14,6 +14,7 @@ import (
 	"time"
 
 	runner_sdk "github.com/ava-labs/avalanche-network-runner-sdk"
+	"github.com/ava-labs/avalanche-network-runner-sdk/rpcpb"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/blobvm/chain"
 	"github.com/ava-labs/blobvm/client"
@@ -154,9 +155,13 @@ var _ = ginkgo.BeforeSuite(func() {
 			ctx,
 			execPath,
 			runner_sdk.WithPluginDir(pluginDir),
-			runner_sdk.WithCustomVMs(map[string]string{
-				vmName: vmGenesisPath,
-			}))
+			runner_sdk.WithBlockchainSpecs(
+				[]*rpcpb.BlockchainSpec{
+					{
+						VmName:  vmName,
+						Genesis: vmGenesisPath,
+					},
+				}))
 		cancel()
 		gomega.Expect(err).Should(gomega.BeNil())
 		outf("{{green}}successfully started:{{/}} %+v\n", resp.ClusterInfo.NodeNames)
@@ -196,9 +201,9 @@ done:
 		// all logs are stored under root data dir
 		logsDir = resp.GetClusterInfo().GetRootDataDir()
 
-		for _, v := range resp.ClusterInfo.CustomVms {
+		for _, v := range resp.ClusterInfo.CustomChains {
 			if v.VmId == vmID.String() {
-				blockchainID = v.BlockchainId
+				blockchainID = v.ChainId
 				outf("{{blue}}spacesvm is ready:{{/}} %+v\n", v)
 				break done
 			}
