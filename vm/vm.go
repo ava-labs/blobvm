@@ -5,6 +5,7 @@
 package vm
 
 import (
+	"context"
 	ejson "encoding/json"
 	"fmt"
 	"net/http"
@@ -279,19 +280,37 @@ func (vm *VM) CreateStaticHandlers() (map[string]*common.HTTPHandler, error) {
 }
 
 // implements "snowmanblock.ChainVM.commom.VM.AppHandler"
-func (vm *VM) AppRequest(nodeID ids.NodeID, requestID uint32, deadline time.Time, request []byte) error {
+func (vm *VM) AppRequest(ctx context.Context, nodeID ids.NodeID, requestID uint32, deadline time.Time, request []byte) error {
 	// (currently) no app-specific messages
 	return nil
 }
 
 // implements "snowmanblock.ChainVM.commom.VM.AppHandler"
-func (vm *VM) AppRequestFailed(nodeID ids.NodeID, requestID uint32) error {
+func (vm *VM) AppRequestFailed(ctx context.Context, nodeID ids.NodeID, requestID uint32) error {
 	// (currently) no app-specific messages
 	return nil
 }
 
 // implements "snowmanblock.ChainVM.commom.VM.AppHandler"
-func (vm *VM) AppResponse(nodeID ids.NodeID, requestID uint32, response []byte) error {
+func (vm *VM) AppResponse(ctx context.Context, nodeID ids.NodeID, requestID uint32, response []byte) error {
+	// (currently) no app-specific messages
+	return nil
+}
+
+// implements "snowmanblock.ChainVM.commom.VM.AppHandler"
+func (vm *VM) CrossChainAppRequest(ctx context.Context, chainID ids.ID, requestID uint32, deadline time.Time, request []byte) error {
+	// (currently) no app-specific messages
+	return nil
+}
+
+// implements "snowmanblock.ChainVM.commom.VM.AppHandler"
+func (vm *VM) CrossChainAppRequestFailed(ctx context.Context, chainID ids.ID, requestID uint32) error {
+	// (currently) no app-specific messages
+	return nil
+}
+
+// implements "snowmanblock.ChainVM.commom.VM.AppHandler"
+func (vm *VM) CrossChainAppResponse(ctx context.Context, chainID ids.ID, requestID uint32, request []byte) error {
 	// (currently) no app-specific messages
 	return nil
 }

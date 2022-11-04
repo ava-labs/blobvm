@@ -4,6 +4,8 @@
 package vm
 
 import (
+	"context"
+
 	"github.com/ava-labs/avalanchego/cache"
 	"github.com/ava-labs/avalanchego/ids"
 	log "github.com/inconshreveable/log15"
@@ -42,7 +44,7 @@ func (n *PushNetwork) sendTxs(txs []*chain.Transaction) error {
 		"txs", len(txs),
 		"size", len(b),
 	)
-	if err := n.vm.appSender.SendAppGossip(b); err != nil {
+	if err := n.vm.appSender.SendAppGossip(context.TODO(), b); err != nil {
 		log.Warn(
 			"GossipTxs failed",
 			"error", err,
@@ -105,7 +107,7 @@ func (n *PushNetwork) RegossipTxs() error {
 // assume gossip via proposervm has been activated
 // ref. "avalanchego/vms/platformvm/network.AppGossip"
 // ref. "coreeth/plugin/evm.GossipHandler.HandleEthTxs"
-func (vm *VM) AppGossip(nodeID ids.NodeID, msg []byte) error {
+func (vm *VM) AppGossip(ctx context.Context, nodeID ids.NodeID, msg []byte) error {
 	log.Debug("AppGossip message handler",
 		"sender", nodeID,
 		"receiver", vm.ctx.NodeID,
