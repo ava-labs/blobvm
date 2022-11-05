@@ -33,6 +33,12 @@ echo "Running with:"
 echo VERSION: ${VERSION}
 echo MODE: ${MODE}
 
+BLOBVM_PATH=$(
+  cd "$(dirname "${BASH_SOURCE[0]}")"
+  cd .. && pwd
+)
+source "$BLOBVM_PATH"/scripts/constants.sh
+
 ############################
 # download avalanchego
 # https://github.com/ava-labs/avalanchego/releases

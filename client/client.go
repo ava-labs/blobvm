@@ -60,7 +60,6 @@ type Client interface {
 func New(uri string, reqTimeout time.Duration) Client {
 	req := rpc.NewEndpointRequester(
 		fmt.Sprintf("%s%s", uri, vm.PublicEndpoint),
-		"blobvm",
 	)
 	return &client{req: req}
 }
@@ -72,7 +71,7 @@ type client struct {
 func (cli *client) Ping(ctx context.Context) (bool, error) {
 	resp := new(vm.PingReply)
 	err := cli.req.SendRequest(ctx,
-		"ping",
+		"blobvm.ping",
 		nil,
 		resp,
 	)
@@ -86,7 +85,7 @@ func (cli *client) Network(ctx context.Context) (uint32, ids.ID, ids.ID, error) 
 	resp := new(vm.NetworkReply)
 	err := cli.req.SendRequest(
 		ctx,
-		"network",
+		"blobvm.network",
 		nil,
 		resp,
 	)
@@ -100,7 +99,7 @@ func (cli *client) Genesis(ctx context.Context) (*chain.Genesis, error) {
 	resp := new(vm.GenesisReply)
 	err := cli.req.SendRequest(
 		ctx,
-		"genesis",
+		"blobvm.genesis",
 		nil,
 		resp,
 	)
@@ -111,7 +110,7 @@ func (cli *client) Accepted(ctx context.Context) (ids.ID, error) {
 	resp := new(vm.LastAcceptedReply)
 	if err := cli.req.SendRequest(
 		ctx,
-		"lastAccepted",
+		"blobvm.lastAccepted",
 		nil,
 		resp,
 	); err != nil {
@@ -125,7 +124,7 @@ func (cli *client) SuggestedRawFee(ctx context.Context) (uint64, uint64, error) 
 	resp := new(vm.SuggestedRawFeeReply)
 	if err := cli.req.SendRequest(
 		ctx,
-		"suggestedRawFee",
+		"blobvm.suggestedRawFee",
 		nil,
 		resp,
 	); err != nil {
@@ -138,7 +137,7 @@ func (cli *client) IssueRawTx(ctx context.Context, d []byte) (ids.ID, error) {
 	resp := new(vm.IssueRawTxReply)
 	if err := cli.req.SendRequest(
 		ctx,
-		"issueRawTx",
+		"blobvm.issueRawTx",
 		&vm.IssueRawTxArgs{Tx: d},
 		resp,
 	); err != nil {
@@ -151,7 +150,7 @@ func (cli *client) HasTx(ctx context.Context, txID ids.ID) (bool, error) {
 	resp := new(vm.HasTxReply)
 	if err := cli.req.SendRequest(
 		ctx,
-		"hasTx",
+		"blobvm.hasTx",
 		&vm.HasTxArgs{TxID: txID},
 		resp,
 	); err != nil {
@@ -164,7 +163,7 @@ func (cli *client) SuggestedFee(ctx context.Context, i *chain.Input) (*tdata.Typ
 	resp := new(vm.SuggestedFeeReply)
 	if err := cli.req.SendRequest(
 		ctx,
-		"suggestedFee",
+		"blobvm.suggestedFee",
 		&vm.SuggestedFeeArgs{Input: i},
 		resp,
 	); err != nil {
@@ -177,7 +176,7 @@ func (cli *client) IssueTx(ctx context.Context, td *tdata.TypedData, sig []byte)
 	resp := new(vm.IssueTxReply)
 	if err := cli.req.SendRequest(
 		ctx,
-		"issueTx",
+		"blobvm.issueTx",
 		&vm.IssueTxArgs{TypedData: td, Signature: sig},
 		resp,
 	); err != nil {
@@ -213,7 +212,7 @@ func (cli *client) Resolve(ctx context.Context, key common.Hash) (bool, []byte, 
 	resp := new(vm.ResolveReply)
 	if err := cli.req.SendRequest(
 		ctx,
-		"resolve",
+		"blobvm.resolve",
 		&vm.ResolveArgs{
 			Key: key,
 		},
@@ -236,7 +235,7 @@ func (cli *client) Balance(ctx context.Context, addr common.Address) (bal uint64
 	resp := new(vm.BalanceReply)
 	if err = cli.req.SendRequest(
 		ctx,
-		"balance",
+		"blobvm.balance",
 		&vm.BalanceArgs{
 			Address: addr,
 		},
@@ -251,7 +250,7 @@ func (cli *client) RecentActivity(ctx context.Context) (activity []*chain.Activi
 	resp := new(vm.RecentActivityReply)
 	if err = cli.req.SendRequest(
 		ctx,
-		"recentActivity",
+		"blobvm.recentActivity",
 		nil,
 		resp,
 	); err != nil {

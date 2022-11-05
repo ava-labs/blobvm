@@ -25,7 +25,6 @@ import (
 // $ benchstat old.txt new.txt
 // name        old time/op  new time/op  delta
 // Test...     18.8ns ± 0%  15.8ns ± 0%   ~     (p=1.000 n=1+1)
-//
 func BenchmarkMempoolAddPrune(b *testing.B) {
 	b.StopTimer()
 
