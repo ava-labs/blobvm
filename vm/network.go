@@ -110,7 +110,7 @@ func (n *PushNetwork) RegossipTxs() error {
 func (vm *VM) AppGossip(ctx context.Context, nodeID ids.NodeID, msg []byte) error {
 	log.Debug("AppGossip message handler",
 		"sender", nodeID,
-		"receiver", vm.ctx.NodeID,
+		"receiver", vm.snowCtx.NodeID,
 		"bytes", len(msg),
 	)
 

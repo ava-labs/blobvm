@@ -37,9 +37,9 @@ type NetworkReply struct {
 }
 
 func (svc *PublicService) Network(_ *http.Request, _ *struct{}, reply *NetworkReply) (err error) {
-	reply.NetworkID = svc.vm.ctx.NetworkID
-	reply.SubnetID = svc.vm.ctx.SubnetID
-	reply.ChainID = svc.vm.ctx.ChainID
+	reply.NetworkID = svc.vm.snowCtx.NetworkID
+	reply.SubnetID = svc.vm.snowCtx.SubnetID
+	reply.ChainID = svc.vm.snowCtx.ChainID
 	return nil
 }
 

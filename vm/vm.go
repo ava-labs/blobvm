@@ -43,7 +43,7 @@ var (
 )
 
 type VM struct {
-	ctx         *snow.Context
+	snowCtx     *snow.Context
 	db          database.Database
 	config      Config
 	genesis     *chain.Genesis
@@ -91,7 +91,8 @@ const (
 
 // implements "snowmanblock.ChainVM.common.VM"
 func (vm *VM) Initialize(
-	ctx *snow.Context,
+	ctx context.Context,
+	snowCtx *snow.Context,
 	dbManager manager.Manager,
 	genesisBytes []byte,
 	upgradeBytes []byte,
@@ -110,7 +111,7 @@ func (vm *VM) Initialize(
 		}
 	}
 
-	vm.ctx = ctx
+	vm.snowCtx = snowCtx
 	vm.db = dbManager.Current().Database
 	vm.activityCache = make([]*chain.Activity, vm.config.ActivityCacheSize)
 
@@ -199,7 +200,7 @@ func (vm *VM) Initialize(
 	return nil
 }
 
-func (vm *VM) SetState(state snow.State) error {
+func (vm *VM) SetState(ctx context.Context, state snow.State) error {
 	switch state {
 	case snow.Bootstrapping:
 		return vm.onBootstrapStarted()
@@ -226,18 +227,18 @@ func (vm *VM) onNormalOperationsStarted() error {
 }
 
 // implements "snowmanblock.ChainVM.common.VM"
-func (vm *VM) Shutdown() error {
+func (vm *VM) Shutdown(ctx context.Context) error {
 	close(vm.stop)
 	<-vm.doneBuild
 	<-vm.doneGossip
-	if vm.ctx == nil {
+	if vm.snowCtx == nil {
 		return nil
 	}
 	return vm.db.Close()
 }
 
 // implements "snowmanblock.ChainVM.common.VM"
-func (vm *VM) Version() (string, error) { return version.Version.String(), nil }
+func (vm *VM) Version(ctx context.Context) (string, error) { return version.Version.String(), nil }
 
 // NewHandler returns a new Handler for a service where:
 //   - The handler's functionality is defined by [service]
@@ -263,7 +264,7 @@ func newHandler(name string, service interface{}, lockOption ...common.LockOptio
 
 // implements "snowmanblock.ChainVM.common.VM"
 // for "ext/vm/[chainID]"
-func (vm *VM) CreateHandlers() (map[string]*common.HTTPHandler, error) {
+func (vm *VM) CreateHandlers(ctx context.Context) (map[string]*common.HTTPHandler, error) {
 	apis := map[string]*common.HTTPHandler{}
 	public, err := newHandler(Name, &PublicService{vm: vm})
 	if err != nil {
@@ -275,7 +276,7 @@ func (vm *VM) CreateHandlers() (map[string]*common.HTTPHandler, error) {
 
 // implements "snowmanblock.ChainVM.common.VM"
 // for "ext/vm/[vmID]"
-func (vm *VM) CreateStaticHandlers() (map[string]*common.HTTPHandler, error) {
+func (vm *VM) CreateStaticHandlers(ctx context.Context) (map[string]*common.HTTPHandler, error) {
 	return nil, nil
 }
 
@@ -316,25 +317,25 @@ func (vm *VM) CrossChainAppResponse(ctx context.Context, chainID ids.ID, request
 }
 
 // implements "snowmanblock.ChainVM.commom.VM.health.Checkable"
-func (vm *VM) HealthCheck() (interface{}, error) {
+func (vm *VM) HealthCheck(ctx context.Context) (interface{}, error) {
 	return http.StatusOK, nil
 }
 
 // implements "snowmanblock.ChainVM.commom.VM.validators.Connector"
-func (vm *VM) Connected(id ids.NodeID, nodeVersion *avagoversion.Application) error {
+func (vm *VM) Connected(ctx context.Context, id ids.NodeID, nodeVersion *avagoversion.Application) error {
 	// no-op
 	return nil
 }
 
 // implements "snowmanblock.ChainVM.commom.VM.validators.Connector"
-func (vm *VM) Disconnected(id ids.NodeID) error {
+func (vm *VM) Disconnected(ctx context.Context, id ids.NodeID) error {
 	// no-op
 	return nil
 }
 
 // implements "snowmanblock.ChainVM.commom.VM.Getter"
 // replaces "core.SnowmanVM.GetBlock"
-func (vm *VM) GetBlock(id ids.ID) (snowman.Block, error) {
+func (vm *VM) GetBlock(ctx context.Context, id ids.ID) (snowman.Block, error) {
 	b, err := vm.GetStatelessBlock(id)
 	if err != nil {
 		log.Warn("failed to get block", "err", err)
@@ -369,7 +370,7 @@ func (vm *VM) GetStatelessBlock(blkID ids.ID) (*chain.StatelessBlock, error) {
 
 // implements "snowmanblock.ChainVM.commom.VM.Parser"
 // replaces "core.SnowmanVM.ParseBlock"
-func (vm *VM) ParseBlock(source []byte) (snowman.Block, error) {
+func (vm *VM) ParseBlock(ctx context.Context, source []byte) (snowman.Block, error) {
 	newBlk, err := chain.ParseBlock(
 		source,
 		choices.Processing,
@@ -383,7 +384,7 @@ func (vm *VM) ParseBlock(source []byte) (snowman.Block, error) {
 
 	// If we have seen this block before, return it with the most
 	// up-to-date info
-	if oldBlk, err := vm.GetBlock(newBlk.ID()); err == nil {
+	if oldBlk, err := vm.GetBlock(ctx, newBlk.ID()); err == nil {
 		log.Debug("returning previously parsed block", "id", oldBlk.ID())
 		return oldBlk, nil
 	}
@@ -393,7 +394,7 @@ func (vm *VM) ParseBlock(source []byte) (snowman.Block, error) {
 
 // implements "snowmanblock.ChainVM"
 // called via "avalanchego" node over RPC
-func (vm *VM) BuildBlock() (snowman.Block, error) {
+func (vm *VM) BuildBlock(ctx context.Context) (snowman.Block, error) {
 	log.Debug("BuildBlock triggered")
 	blk, err := chain.BuildBlock(vm, vm.preferred)
 	vm.builder.HandleGenerateBlock()
@@ -453,7 +454,7 @@ func (vm *VM) submit(tx *chain.Transaction, db database.Database, blkTime int64,
 
 // "SetPreference" implements "snowmanblock.ChainVM"
 // replaces "core.SnowmanVM.SetPreference"
-func (vm *VM) SetPreference(id ids.ID) error {
+func (vm *VM) SetPreference(ctx context.Context, id ids.ID) error {
 	log.Debug("set preference", "id", id)
 	vm.preferred = id
 	return nil
@@ -461,6 +462,6 @@ func (vm *VM) SetPreference(id ids.ID) error {
 
 // "LastAccepted" implements "snowmanblock.ChainVM"
 // replaces "core.SnowmanVM.LastAccepted"
-func (vm *VM) LastAccepted() (ids.ID, error) {
+func (vm *VM) LastAccepted(ctx context.Context) (ids.ID, error) {
 	return vm.lastAccepted.ID(), nil
 }
